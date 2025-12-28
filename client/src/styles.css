@@ -357,3 +357,66 @@ body {
         font-size: 11px;    /* antes: 16px */
     }
 }
+
+/* === GENERIC CARD / PANEL STYLES (used by python/fichaPax/index.html) === */
+.header-container {
+    background: #f8f9fa;
+    padding: 18px 0;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    max-width: 1000px;
+    margin: 28px auto;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.small {
+    font-size: 14px;
+    color: #666;
+}
+
+.code {
+    background: #f7f7f7;
+    padding: 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    overflow: auto;
+}
+
+.menu-button {
+    padding: 8px 14px;
+    background: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+
+.menu-button.secondary {
+    background: #6c757d;
+}
+
+.menu-button.secondary:hover {
+    background: #5a6268;
+}
+
+.menu-button:hover {
+    background: #0056b3;
+}
+
+@media (max-width: 720px) {
+    .card { padding: 14px; margin: 16px; }
+    .h1-initial { font-size: 20px; }
+}
+
