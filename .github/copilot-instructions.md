@@ -34,7 +34,11 @@ python3 -m http.server 8000
 npx http-server -c-1 .
 ```
 
-  - Python helpers: there are utility scripts under `python/fichaPax/` (Python). Run them with `python3 python/fichaPax/llenar_fichas.py` — inspect file headers for required packages.
+  - Python utilities: there are utility scripts under `python/fichaPax/`. Available scripts include:
+    - `llenar_fichas.py` — fill passenger sheets (usage: `python3 python/fichaPax/llenar_fichas.py`).
+    - `generar_con_overlay.py` — generate PDFs with overlays (usage: `python3 python/fichaPax/generar_con_overlay.py`).
+    - `previsualizar_fichas.py` — preview generated forms (usage: `python3 python/fichaPax/previsualizar_fichas.py`).
+    Check the top of each script for required third-party packages and run them with `python3` from the repository root (or activate your virtualenv).
   - Tests: README lists ad-hoc test commands `python3 test_processData.py` and `node test_processData.js` if present; run them from repo root.
 
 - **How to make safe changes**:
