@@ -7,27 +7,43 @@
  * @returns {string} HTML de vouchers
  */
 function relevantDataToForm(relevantData, config) {
-  const groupedData = groupDataByRoomAndVoucher(relevantData);
+  // Agrupar por número de voucher para producir UN voucher por grupo familiar
+  const voucherMap = {};
+  for (const item of relevantData) {
+    if (!voucherMap[item.voucher]) voucherMap[item.voucher] = [];
+    voucherMap[item.voucher].push(item);
+  }
+
   let formHTML = '';
 
-  for (const key in groupedData) {
-    const group = groupedData[key];
-    
-    // Ordenar por DNI
-    group.sort((a, b) => parseInt(a.dni) - parseInt(b.dni));
-    
-    const item = group[0];
-    
-    // Corrección para vouchers individuales
-    let finalCantp = item.cantp;
-    let finalMealCount = item.mealCount;
-    
-    if (group.length === 1) {
-      finalCantp = 1;
-      finalMealCount = config.mealMultiplier[config.mode] * item.stayDuration;
-    }
+  for (const voucher in voucherMap) {
+    const group = voucherMap[voucher];
 
-    formHTML += renderVoucher(item, finalCantp, finalMealCount, config);
+    // Ordenar por DNI para consistencia (titular/representante será el primero)
+    group.sort((a, b) => (parseInt(a.dni) || 0) - (parseInt(b.dni) || 0));
+
+    // Cantidad de personas = número de filas que comparten el mismo voucher
+    const finalCantp = group.length;
+
+    // Duración de la estadía: tomar el máximo entre los integrantes (por seguridad)
+    const stayDuration = Math.max(...group.map(i => i.stayDuration || 1));
+
+    // Cantidad de comidas recalculada a partir del total de pax y días
+    const finalMealCount = finalCantp * stayDuration * config.mealMultiplier[config.mode];
+
+    // Representante para el voucher (primer elemento tras ordenar)
+    const representative = group[0];
+
+    // Unir habitaciones si el grupo ocupa varias
+    const roomSet = Array.from(new Set(group.map(i => i.roomNumber).filter(Boolean)));
+    const roomNumberCombined = roomSet.join(', ');
+
+    const itemForRender = Object.assign({}, representative, {
+      roomNumber: roomNumberCombined || representative.roomNumber,
+      stayDuration
+    });
+
+    formHTML += renderVoucher(itemForRender, finalCantp, finalMealCount, config);
   }
 
   return formHTML;
@@ -49,8 +65,10 @@ function renderVoucher(item, cantp, mealCount, config) {
   
   const title = mode === 'MAP' ? 'Voucher de Comidas' : 'Voucher de Comidas PPJ';
   
+  // Contenedor principal del voucher
   let html = '<div class="container">';
-  html += '<div class="logo-container"><img src="assets/suteba_logo_3.jpg" alt="Logo"></div>';
+  // Ajustar ruta del logo para páginas dentro de la carpeta `client/` (../assets)
+  html += '<div class="logo-container"><img src="../assets/suteba_logo_3.jpg" alt="Logo"></div>';
   html += `<h1 class="h1-container">${title}</h1>`;
   html += `<p class="p-cena">${serviceText}</p>`;
   html += `<div class="passengerName"><strong>Nombre:</strong> ${item.passengerName}</div>`;

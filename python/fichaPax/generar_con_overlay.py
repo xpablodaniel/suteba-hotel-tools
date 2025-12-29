@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from pypdf import PdfReader, PdfWriter
 import io
+import re
 
 
 def crear_overlay_datos(datos_titular, num_pasajeros, acompanantes=[], todas_habitaciones=[]):
@@ -55,9 +56,14 @@ def crear_overlay_datos(datos_titular, num_pasajeros, acompanantes=[], todas_hab
     if email:
         c.drawString(130 * mm, y_contacto, email)
     
-    # Seccional
+    # Seccional (quitar prefijo numérico "NN - ")
     y_seccional = height - 95 * mm
-    c.drawString(45 * mm, y_seccional, datos_titular['Sede'])
+    sede_raw = datos_titular.get('Sede', '')
+    sede_limpia = limpiar_campo(sede_raw)
+    if sede_limpia:
+        # Eliminar prefijo numérico con guión (por ejemplo "39 - CHIVILCOY" -> "CHIVILCOY")
+        sede_limpia = re.sub(r'^\s*\d+\s*[-–—]\s*', '', sede_limpia)
+        c.drawString(45 * mm, y_seccional, sede_limpia)
     
     # Fecha de nacimiento
     y_fechanac = height - 65 * mm
@@ -107,7 +113,7 @@ def crear_overlay_datos(datos_titular, num_pasajeros, acompanantes=[], todas_hab
     if 'DESAYUNO' in servicios and 'MEDIA' not in servicios:
         c.drawString(75 * mm, y_servicios, "X")  # Desayuno
     elif 'MEDIA' in servicios:
-        c.drawString(110 * mm, y_servicios, "X")  # Media pensión
+        c.drawString(113 * mm, y_servicios, "X")  # Media pensión
     elif 'COMPLETA' in servicios or 'PENSION' in servicios:
         c.drawString(140 * mm, y_servicios, "X")  # Pensión completa
     
@@ -179,7 +185,7 @@ if __name__ == "__main__":
         'Nro. habitación': '114',
         'Fecha de ingreso': '26/12/2025',
         'Fecha de egreso': '01/01/2026',
-        'Servicios': 'DESAYUNO U.PROPIAS',
+        'Servicios': 'MEDIA PENSIÓN',
         'Voucher': '39001277'
     }
     
@@ -205,5 +211,8 @@ if __name__ == "__main__":
     # Habitaciones (familia Brovia tiene 114 y 116)
     habitaciones_ejemplo = ['114', '116']
     
-    generar_ficha_sobre_original(datos_ejemplo, 5, "test_overlay.pdf", acompanantes_ejemplo, habitaciones_ejemplo)
-    print("✅ Ficha de prueba generada: test_overlay.pdf")
+    ok = generar_ficha_sobre_original(datos_ejemplo, 5, "test_overlay.pdf", acompanantes_ejemplo, habitaciones_ejemplo)
+    if ok:
+        print("✅ Ficha de prueba generada: test_overlay.pdf")
+    else:
+        print("✗ No se generó el PDF de prueba (falta fichaPax.pdf o hubo un error)")

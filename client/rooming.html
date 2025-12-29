@@ -130,115 +130,135 @@
 
 	function processData(fileContents) {
 	    var lines = fileContents.split('\n');
-	    var reservations = []; // Array para almacenar objetos de reserva
-	    var roomCount = {}; 
-	    var peopleCount = 0; 
+    var roomMap = {}; // Agrupar por habitación
+    var peopleCount = 0;
 
-	    // Omitir el encabezado (i = 1)
-	    for (var i = 1; i < lines.length; i++) {
-		var line = lines[i].trim();
-		if (line === '') continue; 
-		
-		// Parser CSV con separación por comas
-		var fields = line.split(',');
-		
-		// Corrección para CSV con comas extras en campo Observación (columna 4)
-		const EXPECTED_FIELDS_COUNT = 28; // Número esperado de campos en el CSV
-		if (fields.length > EXPECTED_FIELDS_COUNT) {
-		    // Hay campos extras, probablemente por comas en Observación
-		    const extraFields = fields.length - EXPECTED_FIELDS_COUNT;
-		    const endObservationIndex = 4 + extraFields;
-		    
-		    // Recombinar los campos extras como un solo campo Observación
-		    const correctedObservation = fields.slice(4, endObservationIndex + 1).join('; ');
-		    
-		    // Reconstruir el array con la observación corregida
-		    fields = [
-		        ...fields.slice(0, 4),        // Campos 0-3
-		        correctedObservation,          // Campo 4 (Observación corregida)
-		        ...fields.slice(endObservationIndex + 1)  // Campos 5 en adelante
-		    ];
-		}
-		
-		// Validar que la línea tenga suficientes campos
-		if (fields.length < 15) continue; 
-		
-		// --- EXTRACCIÓN Y LIMPIEZA DE CAMPOS ---
-		// Mapeo correcto de columnas del CSV de entrada:
-		// 0: Cód. Alojamiento
-		// 1: Descripción
-		// 2: Nro. habitación
-		// 3: Tipo habitación
-		// 4: Observación habitación
-		// 5: Cantidad plazas
-		// 6: Voucher
-		// 7: Sede
-		// 8: Fecha de ingreso
-		// 9: Fecha de egreso
-		// 10: Plazas ocupadas
-		// 11: Tipo documento
-		// 12: Nro. doc.
-		// 13: Apellido y nombre
-		// 14: Edad
-		
-		var roomNumber = fields[2].replace(/[^\d]/g, '');
-		var din = fields[8];
-		var dout = fields[9];
-		var dni = fields[12];
-		var passengerName = fields[13];
-		var age = fields[14];
-		
-		// --- CREAR OBJETO DE RESERVA ---
-		var reservation = {
-		    'Nro. habitación': roomNumber,
-		    'Fecha de ingreso': din,
-		    'Fecha de egreso': dout,
-		    'Cantidad plazas': fields[5],
-		    'Tipo documento': fields[11],
-		    'Nro. doc.': dni,
-		    'Apellido y nombre': passengerName,
-		    'Edad': age,
-		    'Observación habitación': fields[4], // Ahora maneja comas correctamente
-		    'Tipo': fields[3] // Tipo habitación
-		};
-		reservations.push(reservation);
-		
-		// --- CONTEO DE ESTADÍSTICAS ---
-		roomCount[roomNumber] = (roomCount[roomNumber] || 0) + 1;
-		peopleCount++;
-	    }
+    // Helper: parse dd/mm/yyyy a Date
+    function parseDMY(s) {
+        if (!s) return null;
+        var parts = s.split('/');
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    }
 
-	    // --- ORDENAMIENTO (Por Habitación y luego por Nombre) ---
-	    reservations.sort((a, b) => {
-		// 1. Ordena por Nro. habitación
-		if (a['Nro. habitación'] < b['Nro. habitación']) return -1;
-		if (a['Nro. habitación'] > b['Nro. habitación']) return 1;
-		
-		// 2. Si la habitación es la misma, ordena por Apellido y nombre
-		if (a['Apellido y nombre'] < b['Apellido y nombre']) return -1;
-		if (a['Apellido y nombre'] > b['Apellido y nombre']) return 1;
-		
-		return 0;
-	    });
+    // Omitir el encabezado (i = 1)
+    for (var i = 1; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line === '') continue;
 
-	    // --- CONVERSIÓN A STRING CSV (Para la descarga) ---
-	    // ¡Usamos punto y coma ( como delimitador para LibreOffice!
-	    var csvOutputData = reservations.map(res => {
-		return Object.values(res).join(';');
-	    }).join('\n');
-	    
-	    // Generar las estadísticas por separado
-	    var statsOutput = 
-		'Habitaciones que se ocupan: ' + Object.keys(roomCount).length + '\n' +
-		'Cantidad de pax: ' + peopleCount + '\n';
-		
-	    // Devolver el objeto estructurado
-	    return {
-		data: csvOutputData, // Datos limpios y ordenados (con 
-		stats: statsOutput,
-		reservations: reservations // Array de objetos ordenados (para la tabla)
-	    };
-	}
+        // Parser CSV con separación por comas
+        var fields = line.split(',');
+
+        // Corrección para CSV con comas extras en campo Observación (columna 4)
+        const EXPECTED_FIELDS_COUNT = 28; // Número esperado de campos en el CSV
+        if (fields.length > EXPECTED_FIELDS_COUNT) {
+            const extraFields = fields.length - EXPECTED_FIELDS_COUNT;
+            const endObservationIndex = 4 + extraFields;
+
+            // Recombinar los campos extras como un solo campo Observación
+            const correctedObservation = fields.slice(4, endObservationIndex + 1).join('; ');
+
+            // Reconstruir el array con la observación corregida
+            fields = [
+                ...fields.slice(0, 4),        // Campos 0-3
+                correctedObservation,          // Campo 4 (Observación corregida)
+                ...fields.slice(endObservationIndex + 1)  // Campos 5 en adelante
+            ];
+        }
+
+        // Validar que la línea tenga suficientes campos
+        if (fields.length < 15) continue;
+
+        // --- EXTRACCIÓN Y LIMPIEZA DE CAMPOS ---
+        var roomNumber = fields[2].replace(/[^\d]/g, '');
+        var din = fields[8];
+        var dout = fields[9];
+        var dni = fields[12];
+        var passengerName = fields[13];
+        var age = fields[14];
+        var plazas = parseInt(fields[5]) || 1;
+        var tipo = fields[3];
+        var observacion = fields[4];
+
+        // Contador global de pasajeros
+        peopleCount++;
+
+        // --- AGRUPAR POR HABITACIÓN ---
+        if (!roomMap[roomNumber]) {
+            roomMap[roomNumber] = {
+                'Nro. habitación': roomNumber,
+                'Fecha de ingreso': din,
+                'Fecha de egreso': dout,
+                'Cantidad plazas': plazas,
+                'Tipo documento': fields[11],
+                'Nro. doc.': new Set(dni ? [dni] : []),
+                'Apellido y nombre': new Set(passengerName ? [passengerName] : []),
+                'Edad': new Set(age ? [age] : []),
+                'Observación habitación': new Set(observacion ? [observacion] : []),
+                'Tipo': new Set(tipo ? [tipo] : [])
+            };
+        } else {
+            var r = roomMap[roomNumber];
+
+            // Fecha de ingreso más temprana
+            var existingDin = parseDMY(r['Fecha de ingreso']);
+            var thisDin = parseDMY(din);
+            if (thisDin && (!existingDin || thisDin < existingDin)) r['Fecha de ingreso'] = din;
+
+            // Fecha de egreso más tardía
+            var existingDout = parseDMY(r['Fecha de egreso']);
+            var thisDout = parseDMY(dout);
+            if (thisDout && (!existingDout || thisDout > existingDout)) r['Fecha de egreso'] = dout;
+
+            // Cantidad plazas: tomar el máximo reportado (capacidad real)
+            r['Cantidad plazas'] = Math.max(r['Cantidad plazas'], plazas);
+
+            // Agregar documentos y nombres únicos
+            if (dni) r['Nro. doc.'].add(dni);
+            if (passengerName) r['Apellido y nombre'].add(passengerName);
+            if (age) r['Edad'].add(age);
+            if (observacion) r['Observación habitación'].add(observacion);
+            if (tipo) r['Tipo'].add(tipo);
+        }
+    }
+
+    // --- Construir array de reservations a partir de roomMap ---
+    var reservations = Object.keys(roomMap).map(function (k) {
+        var r = roomMap[k];
+        return {
+            'Nro. habitación': r['Nro. habitación'],
+            'Fecha de ingreso': r['Fecha de ingreso'],
+            'Fecha de egreso': r['Fecha de egreso'],
+            'Cantidad plazas': r['Cantidad plazas'],
+            'Tipo documento': r['Tipo documento'],
+            'Nro. doc.': Array.from(r['Nro. doc.']).join(', '),
+            'Apellido y nombre': Array.from(r['Apellido y nombre']).join(' / '),
+            'Edad': Array.from(r['Edad']).join(', '),
+            'Observación habitación': Array.from(r['Observación habitación']).join(' / '),
+            'Tipo': Array.from(r['Tipo']).join(' / ')
+        };
+    });
+
+    // Ordenar por habitación
+    reservations.sort((a, b) => {
+        if (a['Nro. habitación'] < b['Nro. habitación']) return -1;
+        if (a['Nro. habitación'] > b['Nro. habitación']) return 1;
+        return 0;
+    });
+
+    // --- CONVERSIÓN A STRING CSV (Para la descarga) ---
+    var csvOutputData = reservations.map(res => {
+        return Object.values(res).join(';');
+    }).join('\n');
+
+    // Generar las estadísticas por separado
+    var statsOutput = 
+        'Habitaciones que se ocupan: ' + Object.keys(roomMap).length + '\n' +
+        'Cantidad de pax: ' + peopleCount + '\n';
+
+    return {
+        data: csvOutputData,
+        stats: statsOutput,
+        reservations: reservations
 
 
 	// --- FUNCIONES AUXILIARES ---

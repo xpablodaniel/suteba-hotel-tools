@@ -65,4 +65,17 @@ npx http-server -c-1 .
  2. Modifica un módulo a la vez (parser → business → render) y verifica el flujo completo en el navegador.
  3. Conserva el comportamiento legado `renderMode: 'image'` a menos que confirmes que todos los consumidores pueden usar `boxes`.
 
-Si quieres que amplíe alguna sección (por ejemplo referencias de líneas, scaffolding de tests o dependencias Python), indícame qué parte quieres que extienda.
+---
+
+## Cambios recientes (29/12/2025)
+- Limpieza de **Seccional**: se eliminó el prefijo numérico y guion de `Sede` (ej. `39 - CHIVILCOY` → `CHIVILCOY`) en `python/fichaPax/generar_con_overlay.py`. La limpieza preserva el case original. (Se añadió una prueba local de regex.)
+- Fichas PDF: se preserva el case original al mostrar la Seccional y se agregó manejo robusto de campos vacíos antes de dibujar en el overlay.
+- Agrupación por habitación: en `client/rooming.html` la exportación de `reservas_ingresan.csv` ahora agrupa por **habitación** (una fila por habitación), usando la capacidad máxima reportada en `Cantidad plazas` y concatenando nombres/DNI/observaciones únicos.
+- Voucher por grupo: en `client/src/lib/render.js` se implementó la generación de **un voucher por número de `voucher`** (familias/grupos), donde `Cant. Pax` = número de filas que comparten ese voucher y `Cant. Comidas` se recalcula en consecuencia.
+- Correcciones menores:
+  - Se corrigió un error de sintaxis en `client/src/lib/render.js` que impedía renderizar vouchers correctamente.
+  - Se ajustó la ruta del logo para las páginas dentro de `client/` (`../assets/suteba_logo_3.jpg`).
+
+**Notas de prueba**: probé la expresión regular para la Seccional y validé con `consultaRegimenReport.csv` que la agrupación por habitación y por voucher devuelven los conteos esperados. Si querés, puedo añadir tests unitarios (JS/Py) para cubrir estos casos.
+
+Si querés que deje la ruta del logo como absoluta (`/assets/suteba_logo_3.jpg`) para evitar problemas de base path, lo puedo cambiar también.
