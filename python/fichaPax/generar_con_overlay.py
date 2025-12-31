@@ -10,6 +10,7 @@ from reportlab.lib.units import mm
 from pypdf import PdfReader, PdfWriter
 import io
 import re
+import os
 
 
 def crear_overlay_datos(datos_titular, num_pasajeros, acompanantes=[], todas_habitaciones=[]):
@@ -139,8 +140,9 @@ def generar_ficha_sobre_original(datos_titular, num_pasajeros, nombre_salida, ac
         todas_habitaciones: list con todos los números de habitación del grupo
     """
     try:
-        # Leer el PDF original
-        pdf_original = PdfReader("fichaPax.pdf")
+        # Leer el PDF original (ruta relativa al script)
+        pdf_path = os.path.join(os.path.dirname(__file__), "fichaPax.pdf")
+        pdf_original = PdfReader(pdf_path)
         
         # Crear overlay con los datos
         overlay_packet = crear_overlay_datos(datos_titular, num_pasajeros, acompanantes, todas_habitaciones)

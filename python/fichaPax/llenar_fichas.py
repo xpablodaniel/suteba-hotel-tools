@@ -54,9 +54,12 @@ def llenar_pdf(datos_titular, num_pasajeros, acompanantes=[], todas_habitaciones
     
     try:
         # Generar la ficha sobreponiéndole datos al PDF original
-        generar_ficha_sobre_original(datos_titular, num_pasajeros, nombre_salida, acompanantes, todas_habitaciones)
-        return True
-        
+        ok = generar_ficha_sobre_original(datos_titular, num_pasajeros, nombre_salida, acompanantes, todas_habitaciones)
+        if ok:
+            return True
+        else:
+            print(f"Error: generar_ficha_sobre_original devolvió False para {nombre_salida}")
+            return False
     except Exception as e:
         print(f"Error al generar PDF: {e}")
         return False

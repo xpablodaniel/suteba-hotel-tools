@@ -1,0 +1,22 @@
+✅ COMPLETADO (31/12/2025):
+
+Create client/fichaPax.html UI with drag & drop / file input and basic preview. ✅
+Add JS that uses PapaParse to read CSV and apply current grouping logic (select titular, companions) — reuse the existing grouping logic from Python/JS where possible. ✅
+Use pdf-lib to load fichaPax.pdf in-browser and write fields per voucher (text positioning map required). ✅
+For multi-output: generate PDFs, pack via JSZip and trigger download; show progress + preview. ✅
+Agregar mapeo exacto de posiciones desde generar_con_overlay.py a positions.json y aplicar en el navegador. ✅
+Limitar vista previa a 2 ejemplos y mostrar conteo total en el botón ("Descargar X fichas (ZIP)"). ✅
+Simplificar python/fichaPax/index.html para redirección directa a la UI. ✅
+Actualizar index.html principal para que apunte a client/fichaPax.html. ✅
+Documentación en README.md con referencia CLI y ubicación de salida. ✅
+Corregir scripts Python para buscar fichaPax.pdf relativo al directorio del script. ✅
+
+Estado actual: MVP funcional. Usuarios no técnicos pueden generar fichas desde el navegador (drag & drop CSV → ZIP con PDFs). CLI disponible para usuarios avanzados.
+
+Sugerencias para futuras mejoras:
+- Añadir validación de CSV con mensajes de error específicos (campos faltantes, formato incorrecto).
+- Implementar modo "editar posiciones en vivo" en la UI para ajustar coordenadas sin editar JSON.
+- Agregar opción para personalizar nombre del ZIP descargado (ej: "fichas_hotel_fecha.zip").
+- Considerar agregar preview de cada ficha individual antes de generar el ZIP completo.
+- Tests automatizados (Playwright/Puppeteer) para verificar generación end-to-end.
+- Modo "agrupación manual" para casos donde el agrupamiento automático no sea correcto.

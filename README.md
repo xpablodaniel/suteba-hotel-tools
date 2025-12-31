@@ -79,3 +79,29 @@ npx http-server -c-1 .
 **Notas de prueba**: probé la expresión regular para la Seccional y validé con `consultaRegimenReport.csv` que la agrupación por habitación y por voucher devuelven los conteos esperados. Si querés, puedo añadir tests unitarios (JS/Py) para cubrir estos casos.
 
 Si querés que deje la ruta del logo como absoluta (`/assets/suteba_logo_3.jpg`) para evitar problemas de base path, lo puedo cambiar también.
+
+## Nueva herramienta: Generar fichas (fichaPax) — 31/12/2025
+
+Se añadió una UI de prototipo para generar fichas de pasajeros desde CSV en el navegador:
+
+- Página: `client/fichaPax.html` (requiere servir el repo con un servidor estático, p. ej. `python3 -m http.server 8000`).
+- Funciona con: **PapaParse** (parseo CSV), **pdf-lib** (relleno de plantilla `python/fichaPax/fichaPax.pdf`) y **JSZip** (descarga ZIP múltiple).
+- Uso rápido: abrir `http://localhost:8000/client/fichaPax.html`, arrastrar/seleccionar CSV, revisar la vista previa y hacer clic en *Descargar X fichas (ZIP)*.
+
+Notas:
+- Actualmente la posición del texto en la plantilla PDF es un primer ajuste (coordenadas iniciales). Planeo añadir `python/fichaPax/positions.json` para mapear campos a coordenadas precisas y permitir editar posiciones sin tocar el JS.
+- Los scripts Python en `python/fichaPax/` se conservan como utilitarios (no se borraron).
+
+CLI (opción para usuarios avanzados):
+
+Si preferís la terminal, podés generar las fichas con los scripts Python:
+
+```bash
+pip install reportlab pypdf
+python3 python/fichaPax/llenar_fichas.py path/to/your.csv
+```
+
+Los PDFs generados por la herramienta CLI se guardan en: `python/fichaPax/fichas/`.
+
+> Recomendación: la UI está orientada a usuarios que no usan la terminal; la opción CLI es más rápida para procesamiento por lotes o integraciones con scripts existentes.
+
