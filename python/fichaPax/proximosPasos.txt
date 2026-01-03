@@ -1,36 +1,15 @@
-✅ COMPLETADO (31/12/2025):
+🚀 Estado actual del proyecto
+Implementaciones completadas hoy:
 
-Create client/fichaPax.html UI with drag & drop / file input and basic preview. ✅
-Add JS that uses PapaParse to read CSV and apply current grouping logic (select titular, companions) — reuse the existing grouping logic from Python/JS where possible. ✅
-Use pdf-lib to load fichaPax.pdf in-browser and write fields per voucher (text positioning map required). ✅
-For multi-output: generate PDFs, pack via JSZip and trigger download; show progress + preview. ✅
-Agregar mapeo exacto de posiciones desde generar_con_overlay.py a positions.json y aplicar en el navegador. ✅
-Limitar vista previa a 2 ejemplos y mostrar conteo total en el botón ("Descargar X fichas (ZIP)"). ✅
-Simplificar python/fichaPax/index.html para redirección directa a la UI. ✅
-Actualizar index.html principal para que apunte a client/fichaPax.html. ✅
-Documentación en README.md con referencia CLI y ubicación de salida. ✅
-Corregir scripts Python para buscar fichaPax.pdf relativo al directorio del script. ✅
-
-✅ COMPLETADO (03/01/2026):
-
-Implementar búsqueda individual en UI web (client/fichaPax.html): ✅
-  - Eliminar generación masiva ZIP de la interfaz web
-  - Agregar campo de búsqueda en tiempo real (voucher/DNI/apellido)
-  - Mostrar resultados con información detallada de cada voucher
-  - Botón "Generar ficha" individual para cada resultado
-  - Descarga directa de PDF único (ficha_VOUCHER.pdf)
-  - Vista previa del PDF generado en iframe
-
-IMPORTANTE: 
-- UI web: solo generación individual (búsqueda + descarga única)
-- Scripts Python CLI: mantienen generación masiva (ZIP con todas las fichas)
-
-Estado actual: Sistema optimizado para recepción. Búsqueda rápida y generación on-demand (1 PDF en ~1s). CLI disponible para generación masiva si se necesita.
-
-Sugerencias para futuras mejoras:
-- Añadir validación de CSV con mensajes de error específicos (campos faltantes, formato incorrecto).
-- Implementar modo "editar posiciones en vivo" en la UI para ajustar coordenadas sin editar JSON.
-- Agregar opción para personalizar nombre del ZIP descargado (ej: "fichas_hotel_fecha.zip").
-- Tests automatizados (Playwright/Puppeteer) para verificar generación end-to-end.
-- Modo "agrupación manual" para casos donde el agrupamiento automático no sea correcto.
-- Sistema de tracking de check-ins realizados (marcar vouchers como ✓ procesados).
+✅ Búsqueda individual en tiempo real (voucher/DNI/apellido)
+✅ Generación y descarga de PDF único por demanda
+✅ UI simplificada (sin tabla de 25+ columnas)
+✅ Normalización automática a mayúsculas (web + CLI)
+✅ CLI mantiene generación masiva para casos específicos
+💡 Mejoras sugeridas antes de migrar a base de datos
+1. Tracking de check-ins realizados ⭐ (Prioridad alta)
+Marcar vouchers como "✓ Procesado" después de generar ficha
+Persistir estado en localStorage (temporal)
+Mostrar contador: "8/35 check-ins realizados"
+Filtros: "Todos | Pendientes | Procesados"
+Beneficio: Control visual del progreso durante el turno

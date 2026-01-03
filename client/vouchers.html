@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Vouchers Unificado</title>
+    <title>Generador de Vouchers Comida</title>
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
@@ -11,21 +11,13 @@
         <div class="logo-initial">
             <img src="../assets/suteba_logo_3.jpg" alt="Logo" style="width: 100px;">
         </div>
-        <h1 class="h1-initial">Generador de Vouchers Unificado</h1>
-        <h2 class="h2-initial">Media Pensión (MAP)</h2>
+        <h1 class="h1-initial">Generador de Vouchers de Comida</h1>
+        <h2 class="h2-initial">Media Pensión (MAP) - Cena</h2>
         
         <!-- Botón volver -->
         <div style="text-align: center; margin: 10px 0;">
             <a href="../index.html" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#5a6268'" onmouseout="this.style.backgroundColor='#6c757d'">⬅️ Volver al Menú</a>
         </div>
-        
-        <!-- Toggle de modo (PC deshabilitado: usar MAP por defecto) -->
-        <div class="mode-toggle">
-            <button onclick="toggleMode('MAP')" class="mode-btn active" id="btn-map">MAP (Cena)</button>
-            <button class="mode-btn" id="btn-pc" disabled>PC (inhabilitado)</button>
-        </div>
-
-        <div id="mode-indicator" class="mode-indicator">Modo actual: MAP</div>
         
         <!-- Advertencias y avisos -->
         <div id="warnings" style="text-align:center; color:#856404; background:#fff3cd; border:1px solid #ffeeba; padding:8px; margin:12px auto; display:none; max-width:720px; border-radius:6px;"></div>
@@ -57,25 +49,5 @@
     <script src="src/lib/business.js"></script>
     <script src="src/lib/render.js"></script>
     <script src="src/app.js"></script>
-    
-    <script>
-        // Actualizar estilos de botones al cambiar modo
-        function toggleMode(newMode) {
-            APP_CONFIG.mode = newMode;
-            document.getElementById('mode-indicator').textContent = `Modo actual: ${newMode}`;
-            
-            // Actualizar botones activos
-            document.getElementById('btn-map').classList.remove('active');
-            document.getElementById('btn-pc').classList.remove('active');
-            document.getElementById(`btn-${newMode.toLowerCase()}`).classList.add('active');
-            
-            // Re-render si ya hay datos cargados
-            if (relevantData.length > 0) {
-                const resultOutput = document.getElementById('resultOutput');
-                resultOutput.innerHTML = relevantDataToForm(relevantData, APP_CONFIG);
-                document.getElementById('noDataMessage').style.display = 'none';
-            }
-        }
-    </script>
 </body>
 </html>

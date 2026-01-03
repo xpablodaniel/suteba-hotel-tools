@@ -79,11 +79,24 @@
       const voucher = g.voucher || 'Sin voucher';
       const habitaciones = (g.todas_habitaciones && g.todas_habitaciones.length > 0) ? g.todas_habitaciones.join(', ') : 'Sin asignar';
       const numPax = g.num_pasajeros || 1;
+      
+      // Detectar servicio MAP/PC
+      const servicios = (g.titular['Servicios'] || g.titular['servicio'] || '').toUpperCase();
+      // Importante: verificar MEDIA PENSION primero antes que PENSION solo
+      const hasMAP = servicios.includes('MEDIA PENSION') || servicios.includes('MEDIA');
+      const hasPC = !hasMAP && (servicios.includes('PENSION COMPLETA') || servicios.includes('COMPLETA'));
+      let serviceBadge = '';
+      if (hasPC) {
+        serviceBadge = '<span style="display:inline-block;background:#28a745;color:white;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:8px">PC</span>';
+      } else if (hasMAP) {
+        serviceBadge = '<span style="display:inline-block;background:#ffc107;color:#000;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:8px">MAP</span>';
+      }
+      
       html += `
         <div style="border:1px solid #ddd;padding:12px;border-radius:6px;background:#f9f9f9">
           <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap">
             <div style="flex:1;min-width:200px">
-              <div style="font-weight:bold;font-size:15px;margin-bottom:4px">${escapeHtml(nombre)}</div>
+              <div style="font-weight:bold;font-size:15px;margin-bottom:4px">${escapeHtml(nombre)}${serviceBadge}</div>
               <div style="font-size:13px;color:#555">Voucher: ${escapeHtml(voucher)} | DNI: ${escapeHtml(dni)}</div>
               <div style="font-size:13px;color:#555">Habitación: ${escapeHtml(habitaciones)} | Pasajeros: ${numPax}</div>
             </div>
@@ -141,29 +154,90 @@
     btn.textContent = 'Generando...';
     
     try {
-      status.textContent = '⏳ Generando PDF...';
+      // 1. Generar ficha de pasajero
+      status.textContent = '⏳ Generando ficha de pasajero...';
       const templateUrl = '/python/fichaPax/fichaPax.pdf';
       const templateBytes = await fetch(templateUrl).then(r=>r.arrayBuffer());
       
-      const pdfBytes = await fillTemplate(templateBytes, group, 0);
+      const fichaPdfBytes = await fillTemplate(templateBytes, group, 0);
       
-      // Show preview
-      const blob = new Blob([pdfBytes], {type:'application/pdf'});
-      const url = URL.createObjectURL(blob);
+      // Descargar ficha
+      const nameBase = sanitizeFilename((group.voucher || group.titular['Apellido y nombre'] || group.titular['Nombre'] || 'ficha').toString());
+      const fichaName = `ficha_${nameBase}.pdf`;
+      const fichaBlob = new Blob([fichaPdfBytes], {type:'application/pdf'});
+      triggerDownload(fichaBlob, fichaName);
+      
+      // 2. Verificar si tiene MAP o PC y generar voucher de comida
+      const servicios = (group.titular['Servicios'] || group.titular['servicio'] || '').toUpperCase();
+      console.log('🔍 Servicios detectados:', servicios);
+      
+      // Importante: verificar MEDIA PENSION primero antes que PENSION solo
+      const hasMAP = servicios.includes('MEDIA PENSION') || servicios.includes('MEDIA');
+      const hasPC = !hasMAP && (servicios.includes('PENSION COMPLETA') || servicios.includes('COMPLETA'));
+      
+      console.log('🎯 hasMAP:', hasMAP, '| hasPC:', hasPC);
+      
+      if (hasMAP || hasPC) {
+        status.textContent = `⏳ Generando voucher de comida (${hasPC ? 'PC' : 'MAP'})...`;
+        
+        // Generar voucher de comida HTML
+        const voucherMode = hasPC ? 'PC' : 'MAP';
+        const voucherHtml = await generateMealVoucherHTML(group, voucherMode);
+        
+        console.log('📄 HTML del voucher generado, longitud:', voucherHtml.length);
+        
+        // Verificar que html2pdf esté disponible
+        if (typeof html2pdf === 'undefined') {
+          console.error('❌ html2pdf no está cargado');
+          status.textContent = '❌ Error: html2pdf no disponible';
+          throw new Error('html2pdf no está cargado');
+        }
+        
+        console.log('✅ html2pdf disponible, convirtiendo a PDF...');
+        
+        // Convertir HTML a PDF con html2pdf
+        const voucherElement = document.createElement('div');
+        voucherElement.innerHTML = voucherHtml;
+        voucherElement.style.position = 'absolute';
+        voucherElement.style.left = '-9999px';
+        document.body.appendChild(voucherElement);
+        
+        console.log('📝 Elemento agregado al DOM, iniciando conversión...');
+        
+        const voucherPdfBlob = await html2pdf()
+          .set({
+            margin: 10,
+            filename: `voucher_${voucherMode}_${nameBase}.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          })
+          .from(voucherElement)
+          .output('blob');
+        
+        console.log('✅ PDF generado, tamaño:', voucherPdfBlob.size, 'bytes');
+        
+        document.body.removeChild(voucherElement);
+        
+        // Descargar voucher de comida
+        const voucherName = `voucher_${voucherMode}_${nameBase}.pdf`;
+        console.log('💾 Descargando:', voucherName);
+        triggerDownload(voucherPdfBlob, voucherName);
+        
+        status.textContent = `✅ Ficha y voucher ${voucherMode} generados`;
+      } else {
+        status.textContent = '✅ Ficha generada (sin voucher de comida)';
+      }
+      
+      // Show preview de la ficha
+      const url = URL.createObjectURL(fichaBlob);
       previewFrame.src = url;
       previewArea.style.display = 'block';
       
-      // Download PDF
-      const nameBase = sanitizeFilename((group.voucher || group.titular['Apellido y nombre'] || group.titular['Nombre'] || 'ficha').toString());
-      const name = `ficha_${nameBase}.pdf`;
-      triggerDownload(blob, name);
-      
-      status.textContent = '✅ Ficha generada y descargada';
       setTimeout(() => {
         status.textContent = `✅ ${grouped.length} vouchers cargados`;
-      }, 3000);
+      }, 4000);
     } catch(err) {
-      status.textContent = '❌ Error generando PDF: ' + err.message;
+      status.textContent = '❌ Error generando documentos: ' + err.message;
       console.error(err);
     } finally {
       btn.disabled = false;
