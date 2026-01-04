@@ -1,135 +1,271 @@
-# suteba-hotel-tools
+# SUTEBA Hotel Tools
 
-Herramienta cliente para procesar CSVs de hoteles y generar vouchers y reportes de habitación.
+Sistema web unificado para procesamiento de datos hoteleros, generación de vouchers de comidas y gestión de reservas.
 
----
-
-# Onboarding rápido para agentes de IA
-
-Este repositorio es una pequeña herramienta cliente para procesar CSVs de hoteles y generar vouchers y reportes de habitación. Usa estas notas concisas para ser productivo rápidamente.
-
-- **Panorama general**: sitio estático (sin backend). Puntos de entrada: `index.html`, `vouchers.html`, `rooming.html`. La lógica principal está en `src/` y son scripts ES simples cargados en las páginas.
-
-- **Componentes clave**:
-  - [src/app.js](src/app.js) — arranque, manejo de archivos, toggles de UI y ayuda de impresión.
-  - [src/lib/parser.js](src/lib/parser.js) — parseo y normalización de CSV (soporta dos formas y corrige comas adicionales).
-  - [src/lib/business.js](src/lib/business.js) — reglas de negocio para MAP vs PC, filtrado, agrupación y cálculos.
-  - [src/lib/render.js](src/lib/render.js) — renderizado HTML de vouchers (modo cajas o modo legado basado en imágenes).
-  - `assets/` — logos e imágenes de casillas usadas por `render.js`.
-
-- **Flujo principal de datos** (síguelo al hacer cambios):
- 1. El usuario carga un CSV vía la UI (manejado en `src/app.js`).
- 2. `processData(fileContents, mode)` en `src/lib/business.js` llama a `parseCSV` de `src/lib/parser.js`.
- 3. Las reglas de negocio calculan `mealCount`, `cantp`, `stayDuration` y agrupan las filas.
- 4. `src/lib/render.js` convierte los grupos en HTML imprimible.
-
-- **Convenciones importantes y puntos a tener en cuenta**:
-  - Los CSVs pueden tener dos formatos. `parser.js` detecta por cantidad de campos y trata de arreglar comas extra uniéndolas en los campos de observaciones — evita refactors agresivos que cambien esa heurística sin tests.
-  - Las fechas en los CSV están en `dd/mm/YYYY`; las funciones `formatDate` y `calculateStayDuration` esperan ese formato.
-  - La normalización de strings elimina diacríticos para el matching de servicios (ver `shouldIncludeRow` en `business.js`).
-  - No hay bundler ni scripts npm — los archivos se cargan directamente en el navegador. Ejecuta un servidor estático para desarrollo (ver workflows).
-  - Archivo de ejemplo: `consultaRegimenReport.csv`. La UI mostrará una advertencia si hay filas con **Pensión Completa (PC)** mientras la app está en modo **MAP** (esas filas se filtran).
-
-- **Flujos de trabajo para desarrolladores**:
-  - Vista rápida: abre `index.html` en el navegador (doble clic) o ejecuta un servidor estático:
-
-```bash
-python3 -m http.server 8000
-# o
-npx http-server -c-1 .
-```
-
-  - Utilidades en Python: hay scripts bajo `python/fichaPax/`. Scripts disponibles:
-    - `llenar_fichas.py` — generar/llenar fichas de pasajeros (uso: `python3 python/fichaPax/llenar_fichas.py`).
-    - `generar_con_overlay.py` — generar PDFs con overlay (uso: `python3 python/fichaPax/generar_con_overlay.py`).
-    - `previsualizar_fichas.py` — previsualizar fichas generadas (uso: `python3 python/fichaPax/previsualizar_fichas.py`).
-    Revisa el encabezado de cada script para dependencias y ejecútalos con `python3` desde la raíz del repositorio (o activa tu virtualenv).
-  - Tests: el README original lista comandos ad-hoc `python3 test_processData.py` y `node test_processData.js` si están presentes; ejecútalos desde la raíz.
-
-- **Cómo realizar cambios seguros**:
-  - Al cambiar el parseo, ejecuta pruebas manuales con `test-data-ppj.csv` y `test-data-map.csv` en la raíz.
-  - Prefiere tests pequeños y focalizados (crea `test_*.js` o `test_*.py`) que cubran `parseCSV`, `processData` y `relevantDataToForm`.
-  - Al modificar el layout de impresión, verifica la vista previa de impresión (el CSS está afinado para 4 vouchers por A4).
-
-- **Ejemplos de cambios comunes y dónde implementarlos**:
-  - Cambiar modo inicial o modo de render: editar `APP_CONFIG` en [src/app.js](src/app.js) (claves: `mode`, `renderMode`).
-  - Agregar un nuevo formato CSV: extender `parseCSV` en [src/lib/parser.js](src/lib/parser.js) y actualizar la especificación en este README.
-  - Cambiar reglas de cálculo de comidas: editar `mealMultiplier` en `APP_CONFIG` o `processData` en `src/lib/business.js`.
-
-- **Dependencias e integraciones**:
-  - No hay paquetes JS externos en el código cliente. El parser es custom; migrar a PapaParse es una sugerencia pero no está implementada.
-  - Los scripts Python en `python/fichaPax/` pueden requerir paquetes de terceros — revisa sus imports antes de ejecutar.
-
-- **Si no estás seguro, sigue estas recomendaciones**:
- 1. Ejecuta la app localmente con un servidor estático y prueba con los CSVs provistos.
- 2. Modifica un módulo a la vez (parser → business → render) y verifica el flujo completo en el navegador.
- 3. Conserva el comportamiento legado `renderMode: 'image'` a menos que confirmes que todos los consumidores pueden usar `boxes`.
+**Última actualización:** Enero 2026 - Interfaz unificada con Drag & Drop y lanzador de escritorio
 
 ---
 
-## Cambios recientes (29/12/2025)
-- Limpieza de **Seccional**: se eliminó el prefijo numérico y guion de `Sede` (ej. `39 - CHIVILCOY` → `CHIVILCOY`) en `python/fichaPax/generar_con_overlay.py`. La limpieza preserva el case original. (Se añadió una prueba local de regex.)
-- Fichas PDF: se preserva el case original al mostrar la Seccional y se agregó manejo robusto de campos vacíos antes de dibujar en el overlay.
-- Agrupación por habitación: en `client/rooming.html` la exportación de `reservas_ingresan.csv` ahora agrupa por **habitación** (una fila por habitación), usando la capacidad máxima reportada en `Cantidad plazas` y concatenando nombres/DNI/observaciones únicos.
-- Voucher por grupo: en `client/src/lib/render.js` se implementó la generación de **un voucher por número de `voucher`** (familias/grupos), donde `Cant. Pax` = número de filas que comparten ese voucher y `Cant. Comidas` se recalcula en consecuencia.
-- Correcciones menores:
-  - Se corrigió un error de sintaxis en `client/src/lib/render.js` que impedía renderizar vouchers correctamente.
-  - Se ajustó la ruta del logo para las páginas dentro de `client/` (`../assets/suteba_logo_3.jpg`).
+## 🚀 Inicio Rápido para Usuarios
 
-**Notas de prueba**: probé la expresión regular para la Seccional y validé con `consultaRegimenReport.csv` que la agrupación por habitación y por voucher devuelven los conteos esperados. Si querés, puedo añadir tests unitarios (JS/Py) para cubrir estos casos.
+### Ubuntu (Uso en producción)
 
-Si querés que deje la ruta del logo como absoluta (`/assets/suteba_logo_3.jpg`) para evitar problemas de base path, lo puedo cambiar también.
+1. **Primera vez - Instalar lanzador:**
+   ```bash
+   ./instalar-ubuntu-nativo.sh
+   ```
 
-## Nueva herramienta: Generar fichas (fichaPax) — 31/12/2025
+2. **Uso diario:**
+   - Doble clic en el icono "SUTEBA Hotel Tools" en el escritorio
+   - El servidor se inicia automáticamente
+   - El navegador se abre con la aplicación
 
-Se añadió una UI de prototipo para generar fichas de pasajeros desde CSV en el navegador:
-
-- Página: `client/fichaPax.html` (requiere servir el repo con un servidor estático, p. ej. `python3 -m http.server 8000`).
-- Funciona con: **PapaParse** (parseo CSV), **pdf-lib** (relleno de plantilla `python/fichaPax/fichaPax.pdf`) y **JSZip** (descarga ZIP múltiple).
-- Uso rápido: abrir `http://localhost:8000/client/fichaPax.html`, arrastrar/seleccionar CSV, revisar la vista previa y hacer clic en *Descargar X fichas (ZIP)*.
-
-Notas:
-- Actualmente la posición del texto en la plantilla PDF es un primer ajuste (coordenadas iniciales). Planeo añadir `python/fichaPax/positions.json` para mapear campos a coordenadas precisas y permitir editar posiciones sin tocar el JS.
-- Los scripts Python en `python/fichaPax/` se conservan como utilitarios (no se borraron).
-
-CLI (opción para usuarios avanzados):
-
-Si preferís la terminal, podés generar las fichas con los scripts Python:
+### WSL / Desarrollo
 
 ```bash
-pip install reportlab pypdf
-python3 python/fichaPax/llenar_fichas.py path/to/your.csv
+./launcher.sh
 ```
 
-Los PDFs generados por la herramienta CLI se guardan en: `python/fichaPax/fichas/`.
+### Detener el servidor
 
-> Recomendación: la UI está orientada a usuarios que no usan la terminal; la opción CLI es más rápida para procesamiento por lotes o integraciones con scripts existentes.
+```bash
+./stop-server.sh
+```
 
-## Mejoras y refactorización — 3/1/2026
+---
 
-### 1. Sistema de búsqueda individual en fichaPax
+## 🎯 Características Principales
 
-**Problema**: La generación masiva en ZIP (35-40 fichas) tardaba ~30 segundos y no permitía acceso rápido a fichas individuales durante el check-in.
+### 🎫 Generador de Vouchers (MAP/PC)
+- Toggle entre Media Pensión y Pensión Completa
+- Cálculo automático de comidas por estadía
+- Casillas de tildado por día organizadas (Almuerzo/Cena)
+- Formato optimizado para impresión (4 vouchers por A4)
 
-**Solución implementada**:
-- Reemplazamos la generación en lote por un sistema de **búsqueda en tiempo real** con filtrado por:
-  - Número de voucher
-  - DNI
-  - Apellido
-- La interfaz muestra resultados con badges visuales (MAP en amarillo, PC en verde)
-- Función `generateSingleVoucher()` permite descargar fichas individuales en menos de 1 segundo
-- Se eliminó la tabla de previsualización de 25 columnas que saturaba la UI
+### 📋 Procesador de Reservas (Rooming)
+- Ordenamiento automático por habitación
+- Exportación a CSV compatible con LibreOffice
+- Estadísticas de ocupación
 
-**Archivos modificados**:
-- `client/fichaPax.html` — UI simplificada con búsqueda prominente
-- `client/js/fichaPax.js` — nueva función `renderSearchResults()` y `generateSingleVoucher()`
-- Se removió dependencia de JSZip (ya no es necesaria)
+### 👤 Ficha Pax
+- Generación de fichas de pasajeros con datos del CSV
+- Vouchers de comida automáticos según servicio (MAP/PC)
+- Búsqueda por voucher, DNI o apellido
+- PDFs descargables individuales
 
-### 2. Normalización de nombres a mayúsculas
+### ✨ Mejoras Recientes (Enero 2026)
 
-**Problema**: El sistema gestor de reservas permite entrada de texto con mayúsculas/minúsculas inconsistentes, generando documentos con formato heterogéneo.
+#### Interfaz Unificada con Drag & Drop
+- **Las 3 herramientas** (Vouchers, Rooming, Ficha Pax) ahora tienen interfaz consistente
+- Arrastra archivos CSV directamente o haz clic para seleccionar
+- Feedback visual al arrastrar archivos
 
-**Solución implementada**:
+#### Lanzador de Escritorio para Ubuntu
+- Instalación simple con `./instalar-ubuntu-nativo.sh`
+- Icono en el escritorio que inicia todo automáticamente
+- Sin necesidad de conocimientos técnicos para usuarios finales
+
+#### Solución de CORS
+- Servidor HTTP integrado con lanzador automático
+- Ya no es necesario abrir archivos HTML directamente
+- Funciona correctamente en Ubuntu y WSL
+
+#### Módulo Ficha Pax Completo
+- Función `generateMealVoucherHTML` implementada
+- Genera vouchers HTML con estilos CSS embebidos
+- Conversión automática a PDF con html2pdf
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+suteba-hotel-tools/
+├── index.html                    # Página principal con menú
+├── launcher.sh                   # Lanzador principal (inicia servidor + navegador)
+├── stop-server.sh                # Detiene el servidor
+├── instalar-ubuntu-nativo.sh     # Instalador para Ubuntu (crea icono escritorio)
+├── SUTEBA-Hotel-Tools.desktop    # Lanzador de aplicación Ubuntu
+│
+├── client/                       # Aplicación web
+│   ├── vouchers.html            # Generador de vouchers MAP/PC
+│   ├── rooming.html             # Procesador de reservas
+│   ├── fichaPax.html            # Generador de fichas + vouchers
+│   ├── src/
+│   │   ├── app.js               # Bootstrap, Drag & Drop, configuración
+│   │   ├── styles.css           # Estilos unificados
+│   │   └── lib/
+│   │       ├── parser.js        # Parsing CSV (2 formatos)
+│   │       ├── business.js      # Reglas de negocio MAP vs PC
+│   │       └── render.js        # Templates HTML para vouchers
+│   └── js/
+│       └── fichaPax.js          # Lógica específica de Ficha Pax
+│
+├── assets/                       # Logos e imágenes
+│   └── suteba_logo_3.jpg
+│
+├── python/fichaPax/             # Utilidades Python para fichas
+│   ├── llenar_fichas.py
+│   ├── generar_con_overlay.py
+│   └── positions.json           # Posiciones de campos en PDF
+│
+├── docs/                        # Documentación adicional
+├── test/                        # Tests (si existen)
+│
+└── Documentación:
+    ├── README.md                # Este archivo
+    ├── GUIA_USUARIOS.md         # Guía simple para usuarios finales
+    ├── INSTALACION_POR_ENTORNO.md  # Instalación WSL vs Ubuntu
+    └── SOLUCION_CORS.md         # Detalles técnicos del fix CORS
+```
+
+---
+
+## 💻 Uso para Desarrolladores
+
+### Ejecutar localmente
+
+```bash
+./launcher.sh
+```
+
+El navegador se abrirá automáticamente en `http://localhost:8000/index.html`
+
+### Arquitectura de datos
+
+
+
+### Convenciones importantes
+
+- **Formatos CSV**: `parser.js` detecta automáticamente 2 formatos y corrige comas extra
+- **Fechas**: Formato `dd/mm/YYYY` esperado en CSV
+- **Normalización**: Elimina diacríticos para matching de servicios
+- **Sin bundler**: Archivos cargados directamente en navegador
+- **Usuarios proveen CSV**: No hay archivos de ejemplo incluidos
+
+### Cambios comunes y dónde hacerlos
+
+- **Cambiar modo inicial**: Editar `APP_CONFIG.mode` en [client/src/app.js](client/src/app.js)
+- **Nuevo formato CSV**: Extender `parseCSV` en [client/src/lib/parser.js](client/src/lib/parser.js)
+- **Reglas de comidas**: Modificar `mealMultiplier` en [client/src/lib/business.js](client/src/lib/business.js)
+
+### Scripts Python (Utilidades)
+
+Scripts bajo `python/fichaPax/`:
+- `llenar_fichas.py` — Generación masiva de fichas
+- `generar_con_overlay.py` — PDFs con overlay
+- `previsualizar_fichas.py` — Vista previa de formularios
+- `positions.json` — Mapeo de coordenadas para campos PDF
+
+Ejecutar con: `python3 python/fichaPax/script.py`
+
+---
+
+## 📝 Changelog Detallado
+
+### Enero 2026 - v2.0
+
+**✨ Interfaz unificada con Drag & Drop**
+- Las 3 herramientas (Vouchers, Rooming, Ficha Pax) ahora tienen interfaz consistente
+- Arrastrar archivos CSV o hacer clic para seleccionar
+- Feedback visual (cambio de color al arrastrar)
+- Archivos: `client/vouchers.html`, `client/rooming.html`, `client/src/app.js`
+
+**🖥️ Lanzador de escritorio para Ubuntu**
+- Script `instalar-ubuntu-nativo.sh` crea icono en escritorio
+- Archivo `.desktop` para integración con Ubuntu
+- Script `launcher.sh` inicia servidor + abre navegador automáticamente
+- Script `stop-server.sh` para detener servidor limpiamente
+- Detecta si está en WSL y ajusta comportamiento
+
+**🔧 Solución completa de CORS**
+- Servidor HTTP integrado (puerto 8000)
+- Ya no es necesario abrir archivos HTML directamente
+- Logs en `/tmp/suteba-server.log`
+- PID tracking en `/tmp/suteba-server.pid`
+
+**👤 Módulo Ficha Pax completado**
+- Función `generateMealVoucherHTML()` implementada
+- Genera vouchers HTML self-contained con CSS embebido
+- Conversión a PDF con html2pdf.js
+- Búsqueda por voucher/DNI/apellido en tiempo real
+- Generación individual (< 1 seg vs 30 seg en lote)
+- Badges visuales para MAP/PC
+- Archivo: `client/js/fichaPax.js`
+
+**🧹 Limpieza de proyecto**
+- Eliminados archivos CSV de ejemplo (usuarios proveen los suyos)
+- Removidos scripts redundantes (`start-server.sh`, `start-server.bat`, `instalar-lanzador.sh`)
+- Documentación consolidada en archivos específicos
+
+### Diciembre 2025 - v1.x
+
+**📋 Agrupación por voucher y habitación**
+- Un voucher por grupo familiar (no por persona)
+- Rooming agrupa por habitación con capacidad máxima
+- Cálculo correcto de `Cant. Pax` y `Cant. Comidas`
+
+**🔤 Normalización de nombres**
+- Todos los nombres a MAYÚSCULAS en vouchers
+- Limpieza de prefijos numéricos en Seccionales
+- Case original preservado en fichas PDF
+
+**🎨 Mejoras visuales**
+- Casillas de tildado organizadas por tipo de comida
+- Formato optimizado 4 vouchers por A4
+- Logo SUTEBA en todas las páginas
+- Rutas relativas corregidas (`../assets/`)
+
+---
+
+## 📚 Documentación Adicional
+
+- **[GUIA_USUARIOS.md](GUIA_USUARIOS.md)** — Guía simple para usuarios finales
+- **[INSTALACION_POR_ENTORNO.md](INSTALACION_POR_ENTORNO.md)** — WSL vs Ubuntu nativo
+- **[SOLUCION_CORS.md](SOLUCION_CORS.md)** — Detalles técnicos del fix CORS
+- **[README_Old.md](README_Old.md)** — Versión anterior para referencia
+
+---
+
+## 🆘 Solución de Problemas
+
+### El icono no aparece en el escritorio
+- Verifica que estás en Ubuntu nativo (no WSL): `grep -i microsoft /proc/version`
+- En WSL usa directamente: `./launcher.sh`
+
+### Error: python3 not found
+```bash
+sudo apt update
+sudo apt install python3
+```
+
+### Puerto 8000 ocupado
+```bash
+./stop-server.sh
+# O manualmente:
+lsof -ti:8000 | xargs kill
+```
+
+### No se ven los cambios en el navegador
+Forzar recarga: **Ctrl + Shift + R** (o Cmd + Shift + R en Mac)
+
+---
+
+## 🤝 Contribuir
+
+Este es un proyecto interno de SUTEBA. Para cambios contactar al administrador del sistema.
+
+**Mejoras sugeridas para el futuro:**
+- Migrar parser CSV a PapaParse para mayor robustez
+- Tests unitarios automatizados (Jest/Pytest)
+- Validación de CSV más estricta
+- Opción de temas/colores personalizables
+
+---
+
+**Última actualización:** Enero 4, 2026  
+**Versión:** 2.0  
+**Mantenido por:** Equipo IT SUTEBA
 - Aplicamos `.toUpperCase()` en todas las capas:
   - **Frontend (fichaPax)**: nombres de titular y acompañantes en `client/js/fichaPax.js`
   - **Backend (Python)**: campos "Apellido y nombre" en `python/fichaPax/generar_con_overlay.py`

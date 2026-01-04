@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Vouchers Comida</title>
     <link rel="stylesheet" href="src/styles.css">
+    <style>
+        .drop{border:2px dashed #888;padding:30px;text-align:center;margin:20px auto;cursor:pointer;max-width:600px;border-radius:8px;background:#fafafa}
+        .drop:hover{background:#f0f0f0;border-color:#555}
+        .drop input[type="file"]{margin-top:8px}
+    </style>
 </head>
 <body>
     <div class="header-container">
@@ -22,12 +27,9 @@
         <!-- Advertencias y avisos -->
         <div id="warnings" style="text-align:center; color:#856404; background:#fff3cd; border:1px solid #ffeeba; padding:8px; margin:12px auto; display:none; max-width:720px; border-radius:6px;"></div>
 
-        <!-- Botón de carga de CSV -->
-        <div class="button-upload">
-            <button class="upload-button" onclick="handleFileSelect()">
-                <span>📁</span>
-                Cargar Archivo CSV
-            </button>
+        <!-- Área de carga con Drag & Drop -->
+        <div class="drop" id="dropArea">
+            📂 Arrastra un archivo CSV aquí, o <input type="file" id="fileInput" accept=".csv" />
         </div>
     </div>
 

@@ -407,4 +407,208 @@
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000);
   }
 
+  /**
+   * Genera el HTML del voucher de comida basado en el grupo y modo
+   * @param {Object} group - Grupo con titular y acompañantes
+   * @param {string} mode - 'MAP' o 'PC'
+   * @returns {Promise<string>} HTML del voucher
+   */
+  async function generateMealVoucherHTML(group, mode) {
+    const titular = group.titular || {};
+    
+    // Helper to get field from titular
+    const tVal = (keys) => {
+      for(const k of keys){ 
+        if(titular[k] && String(titular[k]).trim() !== '') return String(titular[k]).trim(); 
+      }
+      return '';
+    };
+    
+    // Extraer datos necesarios
+    const passengerName = (tVal(['Apellido y nombre','Nombre','Nombre completo','NombrePax','Nombre y Apellido']) || 'Sin nombre').toUpperCase();
+    const dni = tVal(['Nro. doc.','Nro doc','Nro Documento']) || 'Sin DNI';
+    const hotel = tVal(['U. Turística','UTuristica','Hotel','Unidad Turistica']) || 'Sin hotel';
+    const dinRaw = tVal(['Fecha de ingreso','Fecha ingreso','Checkin']) || '';
+    const doutRaw = tVal(['Fecha de egreso','Fecha egreso','Checkout']) || '';
+    const habitaciones = (group.todas_habitaciones && group.todas_habitaciones.length > 0) 
+      ? group.todas_habitaciones.join(', ') 
+      : 'Sin asignar';
+    const numPax = group.num_pasajeros || 1;
+    
+    // Calcular duración de estadía
+    let stayDuration = 1;
+    if (dinRaw && doutRaw) {
+      try {
+        // Formato esperado: dd/mm/yyyy
+        const parseDate = (str) => {
+          const [d, m, y] = str.split('/').map(Number);
+          return new Date(y, m - 1, d);
+        };
+        const din = parseDate(dinRaw);
+        const dout = parseDate(doutRaw);
+        const diffTime = Math.abs(dout - din);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        stayDuration = diffDays || 1;
+      } catch(e) {
+        console.warn('Error calculando duración:', e);
+      }
+    }
+    
+    // Calcular cantidad de comidas según modo
+    const mealMultiplier = mode === 'PC' ? 2 : 1; // PC = almuerzo + cena, MAP = solo cena
+    const mealCount = numPax * stayDuration * mealMultiplier;
+    
+    // Textos según modo
+    const serviceText = mode === 'MAP' 
+      ? 'Favor de brindar servicio de Cena al siguiente afiliado:' 
+      : 'Favor de brindar servicio de Pensión Completa al siguiente afiliado:';
+    const title = mode === 'MAP' ? 'Voucher de Comidas' : 'Voucher de Comidas PPJ';
+    
+    // Generar HTML del voucher
+    let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4; margin: 10mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12pt; }
+    .container { 
+      width: 100%; 
+      max-width: 190mm; 
+      margin: 0 auto; 
+      padding: 10mm;
+      border: 2px solid #333;
+    }
+    .logo-container { text-align: center; margin-bottom: 10px; }
+    .logo-container img { max-width: 120px; height: auto; }
+    h1 { text-align: center; font-size: 18pt; margin-bottom: 10px; }
+    .p-cena { text-align: center; margin-bottom: 15px; font-size: 11pt; }
+    .passengerName, .dni, .hotel, .din, .dout, .roomNumber, .cantp, .cantMap {
+      margin-bottom: 8px;
+      font-size: 11pt;
+    }
+    .p-servicios { 
+      text-align: center; 
+      margin: 15px 0 10px 0; 
+      font-size: 12pt; 
+      font-weight: bold;
+    }
+    .check-container { margin-top: 15px; }
+    .check-boxes-grid { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px;
+    }
+    .meal-section { 
+      border: 1px solid #999; 
+      padding: 10px; 
+      border-radius: 4px;
+    }
+    .meal-title { 
+      font-weight: bold; 
+      font-size: 13pt; 
+      margin-bottom: 10px; 
+      text-align: center;
+    }
+    .days-grid { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      justify-content: center;
+    }
+    .day-box { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 5px;
+    }
+    .day-label { 
+      font-size: 10pt; 
+      font-weight: bold;
+    }
+    .checkbox { 
+      width: 20px; 
+      height: 20px; 
+      border: 2px solid #333; 
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <img src="../assets/suteba_logo_3.jpg" alt="Logo SUTEBA">
+    </div>
+    <h1>${title}</h1>
+    <p class="p-cena">${serviceText}</p>
+    <div class="passengerName"><strong>Nombre:</strong> ${passengerName}</div>
+    <div class="dni"><strong>DNI:</strong> ${dni}</div>
+    <div class="hotel"><strong>U.Turística:</strong> ${hotel}</div>
+    <div class="din"><strong>Ingreso:</strong> ${dinRaw}</div>
+    <div class="dout"><strong>Egreso:</strong> ${doutRaw}</div>
+    <div class="roomNumber"><strong>Habitación Nº:</strong> ${habitaciones}</div>
+    <div class="cantp"><strong>Cant. Pax:</strong> ${numPax}</div>
+    <p class="p-servicios">Servicios a Tomar</p>
+    <div class="cantMap"><strong>Cant. Comidas:</strong> ${mealCount}</div>
+    <div class="check-container check-boxes-grid">`;
+    
+    // Generar casillas según modo
+    if (mode === 'PC') {
+      // Pensión Completa: Almuerzo y Cena
+      html += `
+      <div class="meal-section">
+        <div class="meal-title">Almuerzo</div>
+        <div class="days-grid">`;
+      for (let day = 1; day <= stayDuration; day++) {
+        html += `
+          <div class="day-box">
+            <div class="day-label">Día ${day}</div>
+            <div class="checkbox"></div>
+          </div>`;
+      }
+      html += `
+        </div>
+      </div>
+      <div class="meal-section">
+        <div class="meal-title">Cena</div>
+        <div class="days-grid">`;
+      for (let day = 1; day <= stayDuration; day++) {
+        html += `
+          <div class="day-box">
+            <div class="day-label">Día ${day}</div>
+            <div class="checkbox"></div>
+          </div>`;
+      }
+      html += `
+        </div>
+      </div>`;
+    } else {
+      // MAP: solo Cena
+      html += `
+      <div class="meal-section">
+        <div class="meal-title">Cena</div>
+        <div class="days-grid">`;
+      for (let day = 1; day <= stayDuration; day++) {
+        html += `
+          <div class="day-box">
+            <div class="day-label">Día ${day}</div>
+            <div class="checkbox"></div>
+          </div>`;
+      }
+      html += `
+        </div>
+      </div>`;
+    }
+    
+    html += `
+    </div>
+  </div>
+</body>
+</html>`;
+    
+    return html;
+  }
+
 })();

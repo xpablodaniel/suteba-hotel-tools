@@ -23,7 +23,7 @@ This repository is a small, client-side web tool to process hotel CSVs and produ
   - Dates in CSV are `dd/mm/YYYY`; parser functions `formatDate` and `calculateStayDuration` expect that format.
   - String normalization removes diacritics for service matching (see `shouldIncludeRow` in `business.js`).
   - No bundler or npm scripts — files are loaded directly in the browser. Run a static server for development (see workflows).
-  - Typical input file: `consultaRegimenReport.csv`. The UI will display a warning if rows with **Pensión Completa (PC)** are present while the app is in **MAP** mode (those rows are filtered out).
+  - Expected input file: CSV with reservation data (suggested name: `consultaRegimenReport.csv`). Users must provide their own CSV files. The UI will display a warning if rows with **Pensión Completa (PC)** are present while the app is in **MAP** mode (those rows are filtered out).
 
 - **Developer workflows** (what actually works locally):
   - Quick manual preview: open `index.html` in the browser (double-click) or run a simple static server:

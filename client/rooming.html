@@ -7,6 +7,11 @@
     <title>Procesador de Reservas - SUTEBA</title>
     <link rel="stylesheet" href="src/styles.css">
     <style>
+        /* Estilos de Drag & Drop */
+        .drop{border:2px dashed #888;padding:30px;text-align:center;margin:20px auto;cursor:pointer;max-width:600px;border-radius:8px;background:#fafafa}
+        .drop:hover{background:#f0f0f0;border-color:#555}
+        .drop input[type="file"]{margin-top:8px}
+        
         /* Estilos específicos para rooming */
         #btnGuardar {
             margin-top: 10px;
@@ -67,11 +72,13 @@
         <h1 class="h1-initial">Procesador de Reservas Hoteleras</h1>
         <h2 class="h2-initial">Rooming de las reservas que ingresan</h2>
         
-        <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
+        <div style="text-align: center; margin: 15px 0;">
             <a href="../index.html" class="back-button">⬅️ Volver al Menú</a>
-            <button class="upload-button" onclick="handleFileSelect()">
-                <span>📁</span> Cargar Archivo CSV
-            </button>
+        </div>
+        
+        <!-- Área de carga con Drag & Drop -->
+        <div class="drop" id="dropArea">
+            📂 Arrastra un archivo CSV aquí, o <input type="file" id="fileInput" accept=".csv" />
         </div>
     </div>
     
