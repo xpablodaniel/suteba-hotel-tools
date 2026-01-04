@@ -88,51 +88,88 @@
 	    <pre id="statsOutput"></pre>
     	</div>
     <script>
+	// --- SETUP DRAG & DROP ---
+	document.addEventListener('DOMContentLoaded', () => {
+	    const dropArea = document.getElementById('dropArea');
+	    const fileInput = document.getElementById('fileInput');
+	    
+	    if (dropArea && fileInput) {
+	        // Prevent defaults
+	        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+	            dropArea.addEventListener(eventName, preventDefaults, false);
+	        });
+	        
+	        // Highlight on drag
+	        ['dragenter', 'dragover'].forEach(eventName => {
+	            dropArea.addEventListener(eventName, () => dropArea.style.background = '#e0e0e0', false);
+	        });
+	        
+	        ['dragleave', 'drop'].forEach(eventName => {
+	            dropArea.addEventListener(eventName, () => dropArea.style.background = '#fafafa', false);
+	        });
+	        
+	        // Handle drop
+	        dropArea.addEventListener('drop', (e) => {
+	            const files = e.dataTransfer.files;
+	            if (files.length > 0) processFile(files[0]);
+	        }, false);
+	        
+	        // Handle file input
+	        fileInput.addEventListener('change', (e) => {
+	            if (e.target.files.length > 0) processFile(e.target.files[0]);
+	        });
+	    }
+	});
+	
+	function preventDefaults(e) {
+	    e.preventDefault();
+	    e.stopPropagation();
+	}
+	
 	// --- FUNCIONES PRINCIPALES ---
+	
+	function processFile(file) {
+	    const reader = new FileReader();
+	    
+	    reader.onload = () => {
+	        const fileContents = reader.result;
+	        const resultObject = processData(fileContents); // Devuelve {data, stats, reservations}
+
+	        const tableContainer = document.getElementById('tableOutput');
+	        const statsOutput = document.getElementById('statsOutput');
+	        
+	        // 1. Mostrar Estadísticas y Limpiar
+	        statsOutput.textContent = resultObject.stats;
+	        tableContainer.innerHTML = ''; // Limpiar visualización anterior
+
+	        // 2. Construir y Mostrar la Tabla con Datos Ordenados
+	        tableContainer.innerHTML = buildHTMLTable(resultObject.reservations);
+
+	        // 3. Crear o Actualizar el Botón de Guardar
+	        let downloadButton = document.getElementById('btnGuardar');
+	        if (!downloadButton) {
+	            downloadButton = document.createElement('button');
+	            downloadButton.textContent = 'Guardar como archivo CSV (LibreOffice compatible)';
+	            downloadButton.id = 'btnGuardar';
+	            // Añadir el botón al contenedor principal (fuera de la tabla)
+	            document.getElementById('resultContainer').appendChild(downloadButton); 
+	        }
+	        
+	        // Asignar la función de descarga al botón (usa resultObject.data limpia)
+	        downloadButton.onclick = () => {
+	            const csvDataFinal = addHeadersToCSV(resultObject.data);
+	            downloadCSV(csvDataFinal, 'reservas_ingresan.csv');
+	        };
+	    };
+
+	    reader.readAsText(file);
+	}
 
 	function handleFileSelect() {
-	    const fileInput = document.createElement('input');
-	    fileInput.type = 'file';
-	    fileInput.accept = '.csv';
-	    fileInput.addEventListener('change', (event) => {
-		const file = event.target.files[0];
-		const reader = new FileReader();
-
-		reader.onload = () => {
-		    const fileContents = reader.result;
-		    const resultObject = processData(fileContents); // Devuelve {data, stats, reservations}
-
-		    const tableContainer = document.getElementById('tableOutput');
-		    const statsOutput = document.getElementById('statsOutput');
-		    
-		    // 1. Mostrar Estadísticas y Limpiar
-		    statsOutput.textContent = resultObject.stats;
-		    tableContainer.innerHTML = ''; // Limpiar visualización anterior
-
-		    // 2. Construir y Mostrar la Tabla con Datos Ordenados
-		    tableContainer.innerHTML = buildHTMLTable(resultObject.reservations);
-
-		    // 3. Crear o Actualizar el Botón de Guardar
-		    let downloadButton = document.getElementById('btnGuardar');
-		    if (!downloadButton) {
-		        downloadButton = document.createElement('button');
-		        downloadButton.textContent = 'Guardar como archivo CSV (LibreOffice compatible)';
-		        downloadButton.id = 'btnGuardar';
-		        // Añadir el botón al contenedor principal (fuera de la tabla)
-		        document.getElementById('resultContainer').appendChild(downloadButton); 
-		    }
-		    
-		    // Asignar la función de descarga al botón (usa resultObject.data limpia)
-		    downloadButton.onclick = () => {
-		        const csvDataFinal = addHeadersToCSV(resultObject.data);
-		        downloadCSV(csvDataFinal, 'reservas_ingresan.csv');
-		    };
-		};
-
-		reader.readAsText(file);
-	    });
-
-	    fileInput.click();
+	    const fileInput = document.getElementById('fileInput');
+	    if (fileInput) {
+	        fileInput.click();
+	    }
 	}
 
 	function processData(fileContents) {
