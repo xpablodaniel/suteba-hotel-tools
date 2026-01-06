@@ -214,6 +214,28 @@
       return '';
     };
 
+    // Validación de email: rechazar "no informado" (case insensitive)
+    const isValidEmail = (email) => {
+      if (!email) return false;
+      const cleaned = email.trim().toLowerCase();
+      // Rechazar "no informado", "noinformado", "sin email", etc.
+      if (cleaned === 'no informado' || cleaned === 'noinformado' || 
+          cleaned === 'sin email' || cleaned === 'sin mail' ||
+          cleaned === 'n/a' || cleaned === 'na' || cleaned === '-') {
+        return false;
+      }
+      // Validación básica de formato email
+      return cleaned.includes('@') && cleaned.length > 5;
+    };
+
+    // Validación de teléfono: rechazar números muy cortos (menos de 6 dígitos)
+    const isValidPhone = (phone) => {
+      if (!phone) return false;
+      const cleaned = phone.toString().replace(/[^\d]/g, ''); // Solo dígitos
+      // Teléfonos argentinos tienen al menos 6-8 dígitos válidos
+      return cleaned.length >= 6;
+    };
+
     // Draw main fields using the map
     const name = tVal(['Apellido y nombre','Nombre','Nombre completo','NombrePax','Nombre y Apellido']).toUpperCase();
     if(name && pos['Apellido y nombre']){
@@ -234,15 +256,17 @@
       first.drawText(docText, { x, y, size: p.size || 10, font: helv });
     }
 
-    // Telefono / Email
-    const telefono = tVal(['Celular','Teléfono','Telefono']);
+    // Telefono / Email con validación
+    const telefonoRaw = tVal(['Celular','Teléfono','Telefono']);
+    const telefono = isValidPhone(telefonoRaw) ? telefonoRaw : '';
     if(telefono && pos['Telefono']){
       const p = pos['Telefono'];
       const x = p.x_mm * mmToPt;
       const y = pageHeight - (p.y_top_mm * mmToPt);
       first.drawText(telefono, { x, y, size: p.size || 10, font: helv });
     }
-    const email = tVal(['Email','E-mail','Correo']);
+    const emailRaw = tVal(['Email','E-mail','Correo']);
+    const email = isValidEmail(emailRaw) ? emailRaw : '';
     if(email && pos['Email']){
       const p = pos['Email'];
       const x = p.x_mm * mmToPt;
