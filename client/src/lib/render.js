@@ -14,11 +14,20 @@ function relevantDataToForm(relevantData, config) {
     voucherMap[item.voucher].push(item);
   }
 
+  // Convertir a array y ordenar por número de habitación
+  const voucherArray = Object.entries(voucherMap).map(([voucher, group]) => ({
+    voucher,
+    group,
+    // Obtener el menor número de habitación del grupo para ordenar
+    minRoom: Math.min(...group.map(i => parseInt(i.roomNumber) || 999999))
+  }));
+  
+  // Ordenar por número de habitación de menor a mayor
+  voucherArray.sort((a, b) => a.minRoom - b.minRoom);
+
   let formHTML = '';
 
-  for (const voucher in voucherMap) {
-    const group = voucherMap[voucher];
-
+  for (const { voucher, group } of voucherArray) {
     // Ordenar por DNI para consistencia (titular/representante será el primero)
     group.sort((a, b) => (parseInt(a.dni) || 0) - (parseInt(b.dni) || 0));
 

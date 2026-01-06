@@ -48,12 +48,36 @@ Sistema web unificado para procesamiento de datos hoteleros, generación de vouc
 - Estadísticas de ocupación
 
 ### 👤 Ficha Pax
-- Generación de fichas de pasajeros con datos del CSV
-- Vouchers de comida automáticos según servicio (MAP/PC)
-- Búsqueda por voucher, DNI o apellido
-- PDFs descargables individuales
+- Generación individual de fichas de pasajeros desde CSV
+- Búsqueda rápida por voucher, DNI o apellido
+- Vista previa en iframe antes de descargar
+- PDFs descargables con overlay sobre template
+- Módulo independiente (solo fichas, no vouchers)
 
 ### ✨ Mejoras Recientes (Enero 2026)
+
+#### Actualización más reciente (Enero 6, 2026)
+
+**🔧 Corrección dependencias html2pdf**
+- Agregada librería `html2pdf.js` a `fichaPax.html` (corrige error en Ubuntu nativo)
+- El módulo ahora carga correctamente en todos los entornos (WSL y Ubuntu)
+
+**🎯 Módulos independientes reforzados**
+- Eliminada generación automática de vouchers desde `fichaPax`
+- Cada módulo mantiene su funcionalidad específica y separada
+- `fichaPax` → solo fichas de check-in (sin vouchers)
+- `vouchers` → solo vouchers de comida MAP/PC
+
+**🔢 Ordenamiento por habitación en vouchers**
+- Vouchers ahora se ordenan por número de habitación (menor a mayor)
+- Respeta el orden del CSV si ya viene ordenado
+- Implementado en [client/src/lib/render.js](client/src/lib/render.js)
+
+**🧹 Limpieza de marcadores de trazabilidad**
+- Eliminado numeral `#1` de fichas individuales (no tiene sentido en generación unitaria)
+- Código más limpio y PDFs sin marcadores innecesarios
+
+### ✨ Mejoras Anteriores (Enero 2026)
 
 #### Interfaz Unificada con Drag & Drop
 - **Las 3 herramientas** (Vouchers, Rooming, Ficha Pax) ahora tienen interfaz consistente
@@ -263,8 +287,8 @@ Este es un proyecto interno de SUTEBA. Para cambios contactar al administrador d
 
 ---
 
-**Última actualización:** Enero 4, 2026  
-**Versión:** 2.0  
+**Última actualización:** Enero 6, 2026  
+**Versión:** 2.1  
 **Mantenido por:** Equipo IT SUTEBA
 - Aplicamos `.toUpperCase()` en todas las capas:
   - **Frontend (fichaPax)**: nombres de titular y acompañantes en `client/js/fichaPax.js`
