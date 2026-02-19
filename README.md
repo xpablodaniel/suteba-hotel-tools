@@ -317,66 +317,50 @@ Este es un proyecto interno de SUTEBA. Para cambios contactar al administrador d
 
 ---
 
-**Última actualización:** Enero 6, 2026  
-**Versión:** 2.1  
+**Última actualización:** Febrero 19, 2026  
+**Versión:** 2.2  
 **Mantenido por:** Equipo IT SUTEBA
-- Aplicamos `.toUpperCase()` en todas las capas:
-  - **Frontend (fichaPax)**: nombres de titular y acompañantes en `client/js/fichaPax.js`
-  - **Backend (Python)**: campos "Apellido y nombre" en `python/fichaPax/generar_con_overlay.py`
-  - **Rooming**: campo passengerName en `client/rooming.html`
-- Normalización aplicada en el momento de renderizado/escritura (no modifica datos originales del CSV)
 
-**Archivos modificados**:
-- `client/js/fichaPax.js` (líneas ~178, ~296)
-- `python/fichaPax/generar_con_overlay.py` (líneas ~57, ~89)
-- `client/rooming.html` (línea ~66)
+---
 
-### 3. Simplificación de vouchers.html (modo MAP)
+## 🔐 Flujo Git recomendado (sin datos sensibles)
 
-**Contexto**: El hotel opera en temporada de Media Pensión (MAP) durante 7 meses/año. El toggle PC/MAP en la interfaz generaba confusión durante estos períodos.
+Este proyecto procesa datos personales de afiliados. **No se deben subir CSV reales al repositorio**.
 
-**Solución implementada**:
-- Eliminamos el toggle de modo PC/MAP y todas las referencias asociadas
-- Removimos el indicador visual de modo actual
-- Eliminamos la función `toggleMode()` del JavaScript
-- La aplicación ahora opera exclusivamente en modo MAP (puede revertirse editando el código para temporada PC)
+### 1) Revisar estado
 
-**Archivos modificados**:
-- `client/vouchers.html` — removidos controles de toggle y badges de modo
+```bash
+git status
+```
 
-### 4. Corrección crítica y reformateo de rooming.html
+### 2) Validar que no haya CSV de producción para commitear
 
-**Problema 1**: Error de sintaxis (faltaba `};` después de un return) impedía cargar archivos CSV.
+```bash
+git status --short
+```
 
-**Problema 2**: El formato de salida agrupaba pasajeros por habitación, pero el sistema de importación espera **una fila por pasajero**.
+Si aparece un archivo de datos reales (por ejemplo `consultaRegimenReport.csv`), eliminarlo o dejarlo fuera del commit.
 
-**Solución implementada**:
-- Corregido error de sintaxis en bloque `processData()`
-- Reescrita la lógica de procesamiento para generar una fila individual por cada pasajero
-- Mantenida ordenación por número de habitación (con parsing robusto usando regex)
-- Agregada normalización de nombres a mayúsculas
-- Formato de salida ahora incluye 14 campos: habitación, fechas, plazas, doc tipo/número, nombre, edad, voucher, servicio, estado, paquete, sede, observación
+### 3) Agregar cambios de código/documentación
 
-**Archivos modificados**:
-- `client/rooming.html` — función `processData()` completamente reescrita
+```bash
+git add .
+```
 
-### Arquitectura modular preservada
+### 4) Confirmar que no quedaron datos sensibles staged
 
-Durante la sesión exploramos la posibilidad de integrar la generación automática de vouchers de comida junto con las fichas de check-in. Después de implementar un prototipo, decidimos **revertir esta integración** para mantener los módulos independientes:
+```bash
+git diff --cached --name-only
+```
 
-- `fichaPax` → fichas de registro para check-in (PDF con overlay)
-- `vouchers` → vouchers de comida MAP/PC (impresión HTML)
-- `rooming` → procesador de reservas para rooming list (exportación CSV)
+### 5) Commit
 
-Esta separación permite:
-- Mayor flexibilidad en el flujo de trabajo del hotel
-- Mantenimiento más simple (cada módulo tiene una responsabilidad única)
-- Reutilización independiente de cada herramienta
+```bash
+git commit -m "feat: vouchers balneario + mejoras de flujo"
+```
 
-### Próximos pasos sugeridos
+### 6) Push
 
-- Implementar base de datos real para tracking de check-ins y estado de habitaciones (actualmente basado en CSV estático)
-- Añadir tests unitarios para `parseCSV`, `processData` y `relevantDataToForm`
-- Considerar migración del parser custom a PapaParse en los módulos que aún usan código legacy
-- Documentar posiciones del PDF en `positions.json` para facilitar ajustes sin tocar código JavaScript
-
+```bash
+git push origin main
+```
