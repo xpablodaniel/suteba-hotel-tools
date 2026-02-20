@@ -1,0 +1,6 @@
+# Datos sensibles exportados por la app hotelera (no versionar)
+consultaRegimenReport.csv
+
+# Archivos temporales de trabajo local
+*.tmp
+*.bak

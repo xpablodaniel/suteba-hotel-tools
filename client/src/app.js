@@ -10,12 +10,14 @@ const APP_CONFIG = {
   },
   mealMultiplier: {
     MAP: 1,  // 1 comida/día (cena)
-    PC: 2    // 2 comidas/día (almuerzo + cena)
+    PC: 2,   // 2 comidas/día (almuerzo + cena)
+    BALNEARIO: 1 // 1 acceso/día
   },
   csvParser: 'split',            // 'split' (legacy) o 'papaparse' (robusto, futuro)
   serviceLookup: {
     MAP: 'MEDIA PENSION',
-    PC: 'PENSIÓN COMPLETA'        // Con acento para match exacto
+    PC: 'PENSIÓN COMPLETA',       // Con acento para match exacto
+    BALNEARIO: 'BALNEARIO'
   }
 };
 

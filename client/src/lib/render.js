@@ -10,8 +10,9 @@ function relevantDataToForm(relevantData, config) {
   // Agrupar por número de voucher para producir UN voucher por grupo familiar
   const voucherMap = {};
   for (const item of relevantData) {
-    if (!voucherMap[item.voucher]) voucherMap[item.voucher] = [];
-    voucherMap[item.voucher].push(item);
+    const reservationKey = item.voucher || `RES-${item.id || `${item.roomNumber}-${item.dinRaw}-${item.doutRaw}`}`;
+    if (!voucherMap[reservationKey]) voucherMap[reservationKey] = [];
+    voucherMap[reservationKey].push(item);
   }
 
   // Convertir a array y ordenar por número de habitación
@@ -68,11 +69,20 @@ function relevantDataToForm(relevantData, config) {
  */
 function renderVoucher(item, cantp, mealCount, config) {
   const mode = config.mode;
-  const serviceText = mode === 'MAP' 
-    ? 'Favor de brindar servicio de Cena al siguiente afiliado:' 
-    : 'Favor de brindar servicio de Pensión Completa al siguiente afiliado:';
-  
-  const title = mode === 'MAP' ? 'Voucher de Comidas' : 'Voucher de Comidas PPJ';
+  const serviceText = mode === 'MAP'
+    ? 'Favor de brindar servicio de Cena al siguiente afiliado:'
+    : mode === 'PC'
+      ? 'Favor de brindar servicio de Pensión Completa al siguiente afiliado:'
+      : 'Favor de brindar acceso al Balneario Alicante al siguiente afiliado:';
+
+  const title = mode === 'MAP'
+    ? 'Voucher de Comidas'
+    : mode === 'PC'
+      ? 'Voucher de Comidas PPJ'
+      : 'Voucher de Balneario Alicante';
+
+  const quantityLabel = mode === 'BALNEARIO' ? 'Cant. Días:' : 'Cant. Comidas:';
+  const quantityValue = mode === 'BALNEARIO' ? item.stayDuration : mealCount;
   
   // Contenedor principal del voucher
   let html = '<div class="container">';
@@ -88,7 +98,7 @@ function renderVoucher(item, cantp, mealCount, config) {
   html += `<div class="roomNumber"><strong>Habitación Nº:</strong> <span class="roomNumberContent">${item.roomNumber}</span></div>`;
   html += `<div class="cantp"><strong>Cant. Pax:</strong> ${cantp}</div>`;
   html += '<p class="p-servicios"><strong>Servicios a Tomar</strong></p>';
-  html += `<div class="cantMap"><strong>Cant. Comidas:</strong> ${mealCount}</div>`;
+  html += `<div class="cantMap"><strong>${quantityLabel}</strong> ${quantityValue}</div>`;
   
   // Sección de tildado (configurable)
   html += renderCheckSection(config, mealCount, item.stayDuration);
@@ -145,10 +155,24 @@ function renderCheckSection(config, mealCount, stayDuration) {
       }
       html += '</div></div>';
       
-    } else {
+    } else if (mode === 'MAP') {
       // MAP: solo Cena
       html += '<div class="meal-section">';
       html += '<div class="meal-title">Cena</div>';
+      html += '<div class="days-grid">';
+      for (let day = 1; day <= stayDuration; day++) {
+        html += `
+          <div class="day-box">
+            <div class="day-label">Día ${day}</div>
+            <div class="checkbox"></div>
+          </div>
+        `;
+      }
+      html += '</div></div>';
+    } else if (mode === 'BALNEARIO') {
+      // Balneario: una casilla diaria de acceso
+      html += '<div class="meal-section">';
+      html += '<div class="meal-title">Ingreso al Balneario</div>';
       html += '<div class="days-grid">';
       for (let day = 1; day <= stayDuration; day++) {
         html += `

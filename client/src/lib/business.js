@@ -11,13 +11,13 @@ function processData(fileContents, mode, config = APP_CONFIG) {
   const parsedData = parseCSV(fileContents);
   console.log('📋 Parsed data:', parsedData.length, 'rows');
   const relevantData = [];
-  const mealMultiplier = config.mealMultiplier[mode];
+  const mealMultiplier = config.mealMultiplier[mode] ?? 1;
   const serviceLookup = config.serviceLookup[mode];
   console.log('🔍 Mode:', mode, '| Looking for:', serviceLookup, '| Meal multiplier:', mealMultiplier);
 
   for (const row of parsedData) {
     // Filtrar según servicios contratados
-    const shouldInclude = shouldIncludeRow(row.servicios, serviceLookup, mode);
+    const shouldInclude = shouldIncludeRow(row.servicios, row.observacion, serviceLookup, mode);
     console.log('Row', row.dni, '| Servicios:', row.servicios, '| Include?', shouldInclude);
     if (!shouldInclude) {
       continue;
@@ -36,6 +36,7 @@ function processData(fileContents, mode, config = APP_CONFIG) {
     const mealCount = cantp * stayDuration * mealMultiplier;
 
     const relevantFields = {
+      id: row.id,
       passengerName,
       dni: row.dni,
       hotel: row.hotel,
@@ -60,11 +61,12 @@ function processData(fileContents, mode, config = APP_CONFIG) {
 /**
  * Decide si incluir la fila según servicios contratados
  * @param {string} servicios - Campo de servicios del CSV
+ * @param {string} observacion - Campo observación del CSV
  * @param {string} serviceLookup - Servicio esperado ('MEDIA PENSION' o 'PENSION COMPLETA')
  * @param {string} mode - Modo actual
  * @returns {boolean} True si debe incluirse
  */
-function shouldIncludeRow(servicios, serviceLookup, mode) {
+function shouldIncludeRow(servicios, observacion, serviceLookup, mode) {
   // Normalizar texto: mayúsculas + quitar acentos
   const normalize = (text) => {
     return (text || '')
@@ -74,6 +76,7 @@ function shouldIncludeRow(servicios, serviceLookup, mode) {
   };
   
   const servicesNormalized = normalize(servicios);
+  const observationNormalized = normalize(observacion);
   
   if (mode === 'MAP') {
     // Media Pensión: incluir si tiene MEDIA PENSION pero no solo DESAYUNO
@@ -84,6 +87,9 @@ function shouldIncludeRow(servicios, serviceLookup, mode) {
   } else if (mode === 'PC') {
     // Pensión Completa: incluir si tiene PENSION COMPLETA (sin acento)
     return servicesNormalized.includes('PENSION COMPLETA');
+  } else if (mode === 'BALNEARIO') {
+    // Balneario: sin filtros por servicio, incluir todas las reservas
+    return true;
   }
   
   return false;
