@@ -43,6 +43,16 @@ def parse_int(value: str | None, default: int = 0) -> int:
         return default
 
 
+def extract_document_number(value: str | None) -> str:
+    raw = normalize(value)
+    digits_only = "".join(char for char in raw if char.isdigit())
+    return digits_only or raw
+
+
+def format_passenger_name(value: str | None) -> str:
+    return normalize(value).upper()
+
+
 def load_csv_rows(csv_path: str) -> List[Dict[str, str]]:
     with open(csv_path, mode="r", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -65,14 +75,13 @@ def group_by_voucher(rows: Iterable[Dict[str, str]]) -> List[VoucherRecord]:
         holder = select_holder(group_rows)
         rooms = sorted({normalize(r.get("Nro. habitación")) for r in group_rows if normalize(r.get("Nro. habitación"))})
 
-        tipo_doc = normalize(holder.get("Tipo documento")) or "DNI"
-        nro_doc = normalize(holder.get("Nro. doc."))
+        nro_doc = extract_document_number(holder.get("Nro. doc."))
 
         records.append(
             VoucherRecord(
                 voucher=voucher,
-                passenger=normalize(holder.get("Apellido y nombre")),
-                document=f"{tipo_doc} {nro_doc}".strip(),
+                passenger=format_passenger_name(holder.get("Apellido y nombre")),
+                document=nro_doc,
                 hotel=normalize(holder.get("Descripción")),
                 room=", ".join(rooms),
                 from_date=normalize(holder.get("Fecha de ingreso")),
@@ -94,6 +103,22 @@ def resolve_default_logo_path() -> str:
     repo_root = SCRIPT_DIR.parent.parent
     candidate = repo_root / "assets" / "suteba_logo_3.jpg"
     return str(candidate)
+
+
+def resolve_default_csv_path() -> str:
+    candidates: List[Path] = []
+    candidates.extend(SCRIPT_DIR.glob("*.csv"))
+
+    cwd = Path.cwd()
+    if cwd.resolve() != SCRIPT_DIR.resolve():
+        candidates.extend(cwd.glob("*.csv"))
+
+    files = [path for path in candidates if path.is_file()]
+    if not files:
+        return "consultaRegimenReport.csv"
+
+    latest = max(files, key=lambda path: path.stat().st_mtime)
+    return str(latest)
 
 
 def resolve_input_path(path_value: str) -> str:
@@ -227,7 +252,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Genera vouchers Alicante por overlay sobre plantilla PDF")
     parser.add_argument(
         "--csv",
-        default="consultaRegimenReport.csv",
+        default=resolve_default_csv_path(),
         help="Ruta al CSV de reservas (si es relativa, prioriza python/vouchersAlicante)",
     )
     parser.add_argument(
@@ -293,6 +318,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    if not str(args.csv).lower().endswith(".csv"):
+        raise ValueError(f"El archivo indicado en --csv debe tener extensión .csv: {args.csv}")
 
     csv_path = resolve_input_path(args.csv)
     template_pdf_path = resolve_input_path(args.template_pdf)

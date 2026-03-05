@@ -22,7 +22,7 @@ echo ""
 # Obtener directorio del proyecto
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Crear archivo .desktop
+# Crear archivo .desktop principal
 DESKTOP_FILE="$PROJECT_DIR/SUTEBA-Hotel-Tools.desktop"
 
 cat > "$DESKTOP_FILE" << EOF
@@ -61,6 +61,17 @@ fi
 cp "$DESKTOP_FILE" "$DESKTOP_PATH/"
 chmod +x "$DESKTOP_PATH/SUTEBA-Hotel-Tools.desktop"
 
+# Instalar en menú de aplicaciones del usuario
+APPLICATIONS_DIR="$HOME/.local/share/applications"
+mkdir -p "$APPLICATIONS_DIR"
+
+cp "$DESKTOP_FILE" "$APPLICATIONS_DIR/suteba-hotel-tools.desktop"
+chmod +x "$APPLICATIONS_DIR/suteba-hotel-tools.desktop"
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$APPLICATIONS_DIR" >/dev/null 2>&1 || true
+fi
+
 # Marcar como confiable (Ubuntu 20.04+)
 gio set "$DESKTOP_PATH/SUTEBA-Hotel-Tools.desktop" metadata::trusted true 2>/dev/null || {
     echo "⚠️  No se pudo marcar como confiable automáticamente"
@@ -71,6 +82,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "✅ ¡INSTALACIÓN COMPLETA!"
 echo ""
 echo "📱 Verás un icono en tu escritorio: 'SUTEBA Hotel Tools'"
+echo "📱 También quedan disponibles en el menú de aplicaciones de Ubuntu"
 echo ""
 echo "🎯 Para usar:"
 echo "   1. Doble clic en el icono del escritorio"

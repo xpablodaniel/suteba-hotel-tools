@@ -6,7 +6,7 @@
 |---------|-------------------|-----------|
 | **Ubuntu nativo** | `./instalar-ubuntu-nativo.sh` | ✅ Icono de escritorio + acceso web |
 | **WSL / Desarrollo** | `./launcher.sh` | ✅ Servidor web local |
-| **Vouchers Alicante (WSL + Ubuntu)** | `./launcher-vouchers-alicante.sh` | ✅ PDF calibrado listo para imprimir |
+| **Vouchers Alicante** | Menú web (`index.html`) | ✅ Generación desde interfaz gráfica |
 
 ---
 
@@ -23,6 +23,7 @@ cd /ruta/del/proyecto
 
 1. Doble clic en el icono **SUTEBA Hotel Tools** del escritorio.
 2. Se abre el navegador con `http://localhost:8000/index.html`.
+3. Alternativamente, buscá **SUTEBA Hotel Tools** en el menú de aplicaciones.
 
 ---
 
@@ -35,17 +36,11 @@ cd /ruta/del/proyecto
 ./launcher.sh
 ```
 
-### Flujo oficial de vouchers Alicante (overlay PDF)
+### Flujo vouchers Alicante
 
-```bash
-cd /ruta/del/proyecto
-./launcher-vouchers-alicante.sh
-```
-
-Este launcher usa la calibración final y genera por defecto:
-- Entrada: `python/vouchersAlicante/consultaRegimenReport.csv`
-- Plantilla: `python/vouchersAlicante/VOUCHER ALICANTE.pdf`
-- Salida: `python/vouchersAlicante/Vouchers_Alicante_Calibrado.pdf`
+1. Ejecutar `./launcher.sh`
+2. Entrar a `http://localhost:8000/index.html`
+3. Abrir la sección **Vouchers Alicante**
 
 ---
 
@@ -91,7 +86,6 @@ lsof -i:8000
 | `launcher.sh` | Inicia servidor web y abre navegador |
 | `stop-server.sh` | Detiene el servidor web |
 | `instalar-ubuntu-nativo.sh` | Instala acceso de escritorio en Ubuntu nativo |
-| `launcher-vouchers-alicante.sh` | Genera vouchers Alicante por overlay PDF |
 
 ---
 

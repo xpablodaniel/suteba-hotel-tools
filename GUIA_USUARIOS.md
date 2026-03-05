@@ -61,6 +61,12 @@ Desde la página principal puedes acceder a:
 - **🏨 Rooming** - Gestión de habitaciones
 - **👤 Ficha Pax** - Generar fichas de pasajeros con vouchers
 
+### Nota para Vouchers Alicante
+
+En la pantalla de **Vouchers Alicante** puedes usar el botón **Seleccionar CSV (Descargas)**.
+En navegadores compatibles, el selector se abre directamente en la carpeta Descargas/Downloads.
+Si el navegador no soporta esa función, el sistema usa automáticamente el selector normal de archivos.
+
 ---
 
 ## ⏹️ Detener el servidor

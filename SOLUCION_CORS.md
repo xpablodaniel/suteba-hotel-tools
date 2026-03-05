@@ -30,13 +30,15 @@ Luego abrir:
 
 ## Flujo Alicante (overlay PDF)
 
-Para vouchers de Balneario Alicante, usar el launcher específico:
+Para vouchers de Balneario Alicante, usar el flujo web desde el menú principal:
 
 ```bash
-./launcher-vouchers-alicante.sh
+./launcher.sh
 ```
 
-Este flujo no depende del render HTML de `vouchers-balneario.html`; genera el PDF calibrado directamente en:
+Luego abrir `http://localhost:8000/index.html` y entrar en **Vouchers Alicante**.
+
+Este flujo no depende del render HTML legacy de `client/legacy/vouchers-balneario.html`; genera el PDF calibrado directamente en:
 
 `python/vouchersAlicante/Vouchers_Alicante_Calibrado.pdf`
 

@@ -2,7 +2,7 @@
 
 Sistema web unificado para procesamiento de datos hoteleros, generación de vouchers de comidas y gestión de reservas.
 
-**Última actualización:** Febrero 2026 - Flujo oficial de vouchers Alicante por overlay PDF
+**Última actualización:** Marzo 2026 - Flujo web unificado para vouchers Alicante
 
 ---
 
@@ -26,11 +26,9 @@ Sistema web unificado para procesamiento de datos hoteleros, generación de vouc
 ./launcher.sh
 ```
 
-### Vouchers Alicante (flujo oficial de impresión)
+### Vouchers Alicante (flujo actual)
 
-```bash
-./launcher-vouchers-alicante.sh
-```
+Desde el menú web principal (`index.html`), ingresar a **Vouchers Alicante**.
 
 Rutas operativas del flujo Alicante:
 - CSV de entrada: `python/vouchersAlicante/consultaRegimenReport.csv`
@@ -75,18 +73,17 @@ Rutas operativas del flujo Alicante:
 
 ### ✨ Mejoras Recientes
 
-#### Actualización más reciente (Febrero 22, 2026)
+#### Actualización más reciente (Marzo 2026)
 
-**🏖️ Flujo oficial para vouchers Alicante (overlay PDF)**
-- Nuevo launcher raíz: `launcher-vouchers-alicante.sh` (WSL + Ubuntu nativo)
+**🏖️ Flujo oficial para vouchers Alicante (web)**
+- Generación disponible desde `client/vouchers-alicante-gui.html` (acceso por menú principal)
+- Plantilla fija para mantener formato esperado por usuarios
 - Posiciones calibradas finales por slot: `4.0 / 5.5 / 6.0 mm`
-- Resolución robusta de rutas: prioriza `python/vouchersAlicante` para CSV/plantilla/salida
-- Logo overlay desactivado por defecto (activable con `--with-logo`)
 - Corrección de paginación: un voucher por número de voucher sin repetición entre páginas
 
 **🧭 Menú principal ajustado**
-- Se ocultó el acceso a `client/vouchers-balneario.html` desde `index.html`
-- El archivo se conserva en el repo para respaldo técnico
+- El flujo HTML anterior de balneario se movió a `client/legacy/vouchers-balneario.html`
+- El acceso operativo desde `index.html` usa la interfaz de plantilla fija de Alicante
 
 ### ✨ Mejoras Recientes (Enero 2026)
 
@@ -161,7 +158,6 @@ Rutas operativas del flujo Alicante:
 suteba-hotel-tools/
 ├── index.html                    # Página principal con menú
 ├── launcher.sh                   # Lanzador principal (inicia servidor + navegador)
-├── launcher-vouchers-alicante.sh # Lanzador oficial vouchers Alicante (overlay PDF)
 ├── stop-server.sh                # Detiene el servidor
 ├── instalar-ubuntu-nativo.sh     # Instalador para Ubuntu (crea icono escritorio)
 ├── SUTEBA-Hotel-Tools.desktop    # Lanzador de aplicación Ubuntu
